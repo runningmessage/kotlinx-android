@@ -231,7 +231,7 @@ class CircularProgressDrawable
      */
     @RestrictTo(LIBRARY_GROUP)
     @Retention(RetentionPolicy.SOURCE)
-    @IntDef(LARGE, DEFAULT)
+    @IntDef(LARGE.toLong(), DEFAULT.toLong())
     annotation class ProgressDrawableSize
 
     init {

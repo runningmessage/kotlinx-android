@@ -9,7 +9,7 @@ import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
-import com.runningmessage.kotlin.ext.widget.SwipeRefreshLayout
+import com.runningmessage.kotlin.ext.widget.AbsSwipeRefreshLayout
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.random.Random.Default.nextInt
 
@@ -54,13 +54,17 @@ class MainActivity : AppCompatActivity() {
 
         }
         npRecyclerView.adapter = adapter
+        npRefreshLayout.setProgressScale(true)
 
-        npRefreshLayout.setOnRefreshListener(object : SwipeRefreshLayout.OnRefreshListener {
+        npRefreshLayout.postDelayed({ npRefreshLayout.isRefreshing = true }, 1000)
+        npRefreshLayout.postDelayed({ npRefreshLayout.isRefreshing = false }, 5000)
+
+        npRefreshLayout.setOnRefreshListener(object : AbsSwipeRefreshLayout.OnRefreshListener {
             override fun onRefresh() {
                 Toast.makeText(applicationContext, "pull refresh", Toast.LENGTH_SHORT).show()
-                runOnUiThread {
-                    npRefreshLayout.isRefreshing = false
-                }
+
+                npRefreshLayout.postDelayed({ npRefreshLayout.isRefreshing = false }, 3000)
+
             }
 
         })

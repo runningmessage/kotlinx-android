@@ -20,10 +20,12 @@ import android.content.Context
 import android.graphics.*
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.OvalShape
+import android.support.annotation.VisibleForTesting
 import android.support.v4.content.ContextCompat
 import android.support.v4.view.ViewCompat
 import android.view.View
 import android.view.animation.Animation
+import android.view.animation.Transformation
 import android.widget.ImageView
 
 /**
@@ -31,7 +33,8 @@ import android.widget.ImageView
  * called before the animation is actually complete and support shadows on older
  * platforms.
  */
-internal class CircleImageView(context: Context, color: Int) : ImageView(context) {
+class CircleImageView(context: Context, color: Int) : ImageView(context),
+    SwipeRefreshProgress {
 
     private var mListener: Animation.AnimationListener? = null
     var mShadowRadius: Int = 0
@@ -77,24 +80,18 @@ internal class CircleImageView(context: Context, color: Int) : ImageView(context
         }
     }
 
-    fun setAnimationListener(listener: Animation.AnimationListener?) {
+    override fun setAnimationListener(listener: Animation.AnimationListener?) {
         mListener = listener
     }
 
     public override fun onAnimationStart() {
         super.onAnimationStart()
-        if (mListener !=
-            null
-        ) {
-            mListener!!.onAnimationStart(animation)
-        }
+        mListener?.onAnimationStart(animation)
     }
 
     public override fun onAnimationEnd() {
         super.onAnimationEnd()
-        if (mListener != null) {
-            mListener!!.onAnimationEnd(animation)
-        }
+        mListener?.onAnimationEnd(animation)
     }
 
     /**
@@ -159,12 +156,202 @@ internal class CircleImageView(context: Context, color: Int) : ImageView(context
 
     companion object {
 
-        private val KEY_SHADOW_COLOR = 0x1E000000
-        private val FILL_SHADOW_COLOR = 0x3D000000
+        private const val KEY_SHADOW_COLOR = 0x1E000000
+        private const val FILL_SHADOW_COLOR = 0x3D000000
         // PX
-        private val X_OFFSET = 0f
-        private val Y_OFFSET = 1.75f
-        private val SHADOW_RADIUS = 3.5f
-        private val SHADOW_ELEVATION = 4
+        private const val X_OFFSET = 0f
+        private const val Y_OFFSET = 1.75f
+        private const val SHADOW_RADIUS = 3.5f
+        private const val SHADOW_ELEVATION = 4
+        // Default background for the progress spinner
+        private const val CIRCLE_BG_LIGHT = -0x50506
+
+        @VisibleForTesting
+        internal val CIRCLE_DIAMETER = 40
+        @VisibleForTesting
+        internal val CIRCLE_DIAMETER_LARGE = 56
+
+        private const val MAX_ALPHA = 255
+        private const val STARTING_PROGRESS_ALPHA = (.3f * MAX_ALPHA).toInt()
+
+
+        // Max amount of circle that can be filled by progress during swipe gesture,
+        // where 1.0 is a full circle
+        private const val MAX_PROGRESS_ANGLE = .8f
+
+        private const val ALPHA_ANIMATION_DURATION = 300
+
+        fun create(context: Context): CircleImageView =
+            CircleImageView(context, CIRCLE_BG_LIGHT).apply {
+                visibility = View.GONE
+            }
+    }
+
+    private var mProgress: CircularProgressDrawable
+    private var mScaleAnimation: Animation? = null
+    private var mAlphaStartAnimation: Animation? = null
+    private var mAlphaMaxAnimation: Animation? = null
+
+    override fun setSize(size: Int) {
+        if (size != CircularProgressDrawable.LARGE && size != CircularProgressDrawable.DEFAULT) {
+            return
+        }
+        val metrics = resources.displayMetrics
+        progressCircleDiameter = if (size == CircularProgressDrawable.LARGE) {
+            (CIRCLE_DIAMETER_LARGE * metrics.density).toInt()
+        } else {
+            (CIRCLE_DIAMETER * metrics.density).toInt()
+        }
+        // force the bounds of the progress circle inside the circle view to
+        // update by setting it to null before updating its size and then
+        // re-setting it
+        setImageDrawable(null)
+        mProgress?.setStyle(size)
+        setImageDrawable(mProgress)
+    }
+
+    /**
+     * Get the diameter of the progress circle that is displayed as part of the
+     * swipe to refresh layout.
+     *
+     * @return Diameter in pixels of the progress circle view.
+     */
+    var progressCircleDiameter: Int = 0
+        private set
+
+    private val mMediumAnimationDuration: Int = resources.getInteger(
+        android.R.integer.config_mediumAnimTime
+    )
+
+    init {
+        val metrics = resources.displayMetrics
+        progressCircleDiameter = (CIRCLE_DIAMETER * metrics.density).toInt()
+
+        mProgress = CircularProgressDrawable(context)
+        mProgress?.setStyle(CircularProgressDrawable.DEFAULT)
+        setImageDrawable(mProgress)
+    }
+
+    override val viewWidth: Int
+        get() = progressCircleDiameter
+
+    override val viewHeight: Int
+        get() = progressCircleDiameter
+
+    override var progressAlpha: Int
+        get() = mProgress.alpha
+        set(alpha) {
+            mProgress.alpha = alpha
+        }
+
+    override fun autoToAnimRefreshing(listener: Animation.AnimationListener?) {
+        visibility = View.VISIBLE
+        progressAlpha = MAX_ALPHA
+        mScaleAnimation = object : Animation() {
+            public override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
+                scaleX = interpolatedTime
+                scaleY = interpolatedTime
+            }
+        }
+        mScaleAnimation!!.duration = mMediumAnimationDuration.toLong()
+        if (listener != null) {
+            setAnimationListener(listener)
+        }
+        clearAnimation()
+        startAnimation(mScaleAnimation)
+    }
+
+    override fun releaseToAnimRefreshing(interpolatedTime: Float) {
+        mProgress.arrowScale = 1 - interpolatedTime
+    }
+
+    override fun startAnimRefreshing() {
+        // Make sure the progress view is fully visible
+        mProgress.alpha = MAX_ALPHA
+        mProgress.start()
+    }
+
+    override fun stopAnimRefreshing() {
+        mProgress.stop()
+        background.alpha = MAX_ALPHA
+        mProgress.alpha = MAX_ALPHA
+    }
+
+    override fun startDragging() {
+        mProgress.alpha = STARTING_PROGRESS_ALPHA
+    }
+
+
+    override fun moveSpinner(
+        overscrollTop: Float,
+        totalDragDistance: Float,
+        adjustedPercent: Float,
+        tensionPercent: Float,
+        targetY: Int
+    ) {
+        mProgress.arrowEnabled = true
+
+
+        if (overscrollTop < totalDragDistance) {
+            if (progressAlpha > STARTING_PROGRESS_ALPHA && !isAnimationRunning(mAlphaStartAnimation)) {
+                // Animate the alpha
+                startProgressAlphaStartAnimation()
+            }
+        } else {
+            if (progressAlpha < MAX_ALPHA && !isAnimationRunning(mAlphaMaxAnimation)) {
+                // Animate the alpha
+                startProgressAlphaMaxAnimation()
+            }
+        }
+
+        val strokeStart = adjustedPercent * .8f
+        mProgress.setStartEndTrim(0f, Math.min(MAX_PROGRESS_ANGLE, strokeStart))
+        mProgress.arrowScale = Math.min(1f, adjustedPercent)
+
+        val rotation = (-0.25f + .4f * adjustedPercent + tensionPercent * 2) * .5f
+        mProgress.progressRotation = rotation
+    }
+
+    private fun isAnimationRunning(animation: Animation?): Boolean {
+        return animation != null && animation.hasStarted() && !animation.hasEnded()
+    }
+
+    private fun startProgressAlphaStartAnimation() {
+        mAlphaStartAnimation =
+                startAlphaAnimation(
+                    progressAlpha,
+                    STARTING_PROGRESS_ALPHA
+                )
+    }
+
+    private fun startProgressAlphaMaxAnimation() {
+        mAlphaMaxAnimation = startAlphaAnimation(
+            progressAlpha,
+            MAX_ALPHA
+        )
+    }
+
+    private fun startAlphaAnimation(startingAlpha: Int, endingAlpha: Int): Animation {
+        val alpha = object : Animation() {
+            public override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
+                progressAlpha =
+                        (startingAlpha + (endingAlpha - startingAlpha) * interpolatedTime).toInt()
+            }
+        }
+        alpha.duration = ALPHA_ANIMATION_DURATION.toLong()
+        // Clear out the previous animation listeners.
+        setAnimationListener(null)
+        clearAnimation()
+        startAnimation(alpha)
+        return alpha
+    }
+
+    override fun finishSpinner(overscrollTop: Float, mTotalDragDistance: Float) {
+        if (overscrollTop > mTotalDragDistance) {
+
+        } else {
+            mProgress.setStartEndTrim(0f, 0f)
+            mProgress.arrowEnabled = false
+        }
     }
 }
