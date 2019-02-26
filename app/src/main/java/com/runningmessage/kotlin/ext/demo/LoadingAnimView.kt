@@ -35,7 +35,7 @@ class LoadingAnimView @JvmOverloads constructor(context: Context, attrs: Attribu
         mListener?.onAnimationEnd(animation)
     }
 
-    override fun setSize(size: Int) {
+    override fun setStyle(style: Int) {
         // nothing to do
     }
 
@@ -43,9 +43,6 @@ class LoadingAnimView @JvmOverloads constructor(context: Context, attrs: Attribu
         get() = dip2px(context, 32f)
     override val viewHeight: Int
         get() = dip2px(context, 16f)
-    override var progressAlpha: Int
-        get() = 0
-        set(value) {}
 
     override fun autoToAnimRefreshing(listener: Animation.AnimationListener?) {
         listener?.onAnimationEnd(null)
@@ -69,15 +66,15 @@ class LoadingAnimView @JvmOverloads constructor(context: Context, attrs: Attribu
 
     override fun moveSpinner(
         overscrollTop: Float,
-        mTotalDragDistance: Float,
+        totalDragDistance: Float,
         adjustedPercent: Float,
         tensionPercent: Float,
         targetY: Int
     ) {
-        stopFrame(overscrollTop / mTotalDragDistance)
+        stopFrame(overscrollTop / totalDragDistance)
     }
 
-    override fun finishSpinner(overscrollTop: Float, mTotalDragDistance: Float) {
+    override fun finishSpinner(overscrollTop: Float, totalDragDistance: Float) {
         stopAnim()
     }
 

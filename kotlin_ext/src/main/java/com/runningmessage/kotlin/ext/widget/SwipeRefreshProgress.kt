@@ -9,13 +9,11 @@ interface SwipeRefreshProgress {
 
     fun setAnimationListener(listener: Animation.AnimationListener?)
 
-    fun setSize(size: Int)
+    fun setStyle(style: Int)
 
     val viewWidth: Int
 
     val viewHeight: Int
-
-    var progressAlpha: Int
 
     fun autoToAnimRefreshing(listener: Animation.AnimationListener?)
 
@@ -29,12 +27,25 @@ interface SwipeRefreshProgress {
 
     fun moveSpinner(
         overscrollTop: Float,
-        mTotalDragDistance: Float,
+        totalDragDistance: Float,
         adjustedPercent: Float,
         tensionPercent: Float,
         targetY: Int
     )
 
-    fun finishSpinner(overscrollTop: Float, mTotalDragDistance: Float)
+    fun finishSpinner(overscrollTop: Float, totalDragDistance: Float)
 
+}
+
+private const val STYLE_MASK_BASE = 0b1111
+const val STYLE_MASK_SIZE = STYLE_MASK_BASE
+
+
+const val STYLE_DEFAULT = 1
+const val STYLE_LARGE = 2
+
+fun parseStyle(style: Int) = IntArray(8).apply {
+    for (i in 0..7) {
+        this[i] = style and (STYLE_MASK_BASE shl (i * 4))
+    }
 }

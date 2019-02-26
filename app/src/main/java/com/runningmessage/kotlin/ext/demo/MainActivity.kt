@@ -60,13 +60,19 @@ class MainActivity : AppCompatActivity() {
         npRefreshLayout.setTargetPull(true, dip2px(applicationContext, 4f))
 
         npRefreshLayout.postDelayed({ npRefreshLayout.isRefreshing = true }, 1000)
-        npRefreshLayout.postDelayed({ npRefreshLayout.isRefreshing = false }, 5000)
+        npRefreshLayout.postDelayed({
+            npRefreshLayout.setShowRemind(message = "Auto Refresh Message")
+            npRefreshLayout.isRefreshing = false
+        }, 5000)
 
         npRefreshLayout.setOnRefreshListener(object : AbsSwipeRefreshLayout.OnRefreshListener {
             override fun onRefresh() {
                 Toast.makeText(applicationContext, "pull refresh", Toast.LENGTH_SHORT).show()
 
-                npRefreshLayout.postDelayed({ npRefreshLayout.isRefreshing = false }, 3000)
+                npRefreshLayout.postDelayed({
+                    npRefreshLayout.setShowRemind(message = "Manual Refresh Message")
+                    npRefreshLayout.isRefreshing = false
+                }, 3000)
 
             }
 

@@ -57,7 +57,7 @@ import android.widget.ListView
  * refresh of the content wherever this gesture is used.
  *
  */
-abstract class AbsSwipeRefreshLayout<ProgressView>
+abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
 /**
  * Constructor that is called when inflating SwipeRefreshLayout from XML.
  *
@@ -67,7 +67,9 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
 @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     ViewGroup(context, attrs), NestedScrollingParent, NestedScrollingChild
         where ProgressView : View,
-              ProgressView : SwipeRefreshProgress {
+              ProgressView : SwipeRefreshProgress,
+              RemindView : View,
+              RemindView : SwipeRefreshRemind {
 
     private var mTarget: View? = null // the target of the gesture
     internal var mListener: OnRefreshListener? = null
@@ -86,6 +88,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
     private var mNestedScrollInProgress: Boolean = false
 
     internal var mCurrentTargetOffsetTop: Int = 0
+    private var mCurrentRemindOffsetTop: Int? = null
 
     private var mInitialMotionY: Float = 0.toFloat()
     private var mInitialDownY: Float = 0.toFloat()
@@ -123,6 +126,9 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
     var progressViewEndOffset: Int = 0
         internal set
 
+    var remindViewStartOffset: Int = 0
+    var remindViewEndOffset: Int = 0
+
     private var mScaleDownAnimation: Animation? = null
 
     private var mScaleDownToStartAnimation: Animation? = null
@@ -132,7 +138,12 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
     // Whether the client has set a custom starting position;
     internal var mUsingCustomStart: Boolean = false
 
-    private var mChildScrollUpCallback: OnChildScrollUpCallback<ProgressView>? = null
+    private var mShowRemind = false
+    private var mRemindMessage = ""
+    private var mRemindView: RemindView? = null
+    private var mRemindTime = REMIND_DURATION
+
+    private var mChildScrollUpCallback: OnChildScrollUpCallback<ProgressView, RemindView>? = null
 
     private val mRefreshListener = object : Animation.AnimationListener {
         override fun onAnimationStart(animation: Animation?) {}
@@ -149,9 +160,83 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
                 }
                 mCurrentTargetOffsetTop = mProgressView.top
             } else {
-                reset()
+                if (mShowRemind && mRemindMessage.isNotEmpty()) {
+                    ensureRemind()
+
+                    if (mRemindView != null) {
+                        showRemind()
+                    } else {
+                        reset()
+                    }
+
+                } else {
+                    reset()
+                }
             }
         }
+    }
+
+    private fun showRemind() {
+
+        mProgressView.clearAnimation()
+        mProgressView.stopAnimRefreshing()
+        mProgressView.visibility = View.GONE
+
+
+        mRemindView?.visibility = View.VISIBLE
+        mRemindView?.message = mRemindMessage
+        mRemindMessage = ""// only show once and clear the message
+        animateOffsetToRemindPosition(object : AnimationListener {
+            override fun onAnimationRepeat(animation: Animation?) {
+
+            }
+
+            override fun onAnimationEnd(animation: Animation?) {
+                mCurrentRemindOffsetTop = mRemindView?.top
+                postDelayed({
+                    animateOffsetToRemindStartPosition(object : AnimationListener {
+                        override fun onAnimationRepeat(animation: Animation?) {
+
+                        }
+
+                        override fun onAnimationEnd(animation: Animation?) {
+                            mCurrentRemindOffsetTop = null
+                            reset()
+                        }
+
+                        override fun onAnimationStart(animation: Animation?) {
+
+                        }
+                    })
+                }, mRemindTime)
+            }
+
+            override fun onAnimationStart(animation: Animation?) {
+
+            }
+        })
+    }
+
+    private fun animateOffsetToRemindPosition(listener: AnimationListener?) {
+        mAnimateToRemindPosition.reset()
+        mAnimateToRemindPosition.duration = ANIMATE_TO_REMIND_DURATION.toLong()
+        mAnimateToRemindPosition.interpolator = mDecelerateInterpolator
+        if (listener != null) {
+            mRemindView?.setAnimationListener(listener)
+        }
+        mRemindView?.clearAnimation()
+        mRemindView?.startAnimation(mAnimateToRemindPosition)
+    }
+
+    private fun animateOffsetToRemindStartPosition(listener: AnimationListener?) {
+        mAnimateToRemindStartPosition.reset()
+        mAnimateToRemindStartPosition.duration = ANIMATE_TO_REMIND_START_DURATION.toLong()
+        mAnimateToRemindStartPosition.interpolator = mDecelerateInterpolator
+        if (listener != null) {
+            mRemindView?.setAnimationListener(listener)
+        }
+        mRemindView?.clearAnimation()
+        mRemindView?.startAnimation(mAnimateToRemindStartPosition)
     }
 
     /**
@@ -201,6 +286,27 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         }
     }
 
+    private val mAnimateToRemindPosition = object : Animation() {
+        override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
+            var endTarget = remindViewEndOffset
+            var from = remindViewStartOffset
+            var targetTop = from + ((endTarget - from) * interpolatedTime).toInt()
+            val offset = targetTop - (mRemindView?.top ?: 0)
+            setRemindOffsetTopAndBottom(offset)
+        }
+    }
+    private val mAnimateToRemindStartPosition = object : Animation() {
+        override fun applyTransformation(interpolatedTime: Float, t: Transformation?) {
+            var endTarget = remindViewStartOffset
+            var from = remindViewEndOffset
+            var targetTop = from + ((endTarget - from) * interpolatedTime).toInt()
+            val offset = targetTop - (mRemindView?.top ?: 0)
+            setRemindOffsetTopAndBottom(offset)
+
+            mCurrentTargetOffsetTop = targetTop
+        }
+    }
+
     internal fun reset() {
         mProgressView.clearAnimation()
         mProgressView.stopAnimRefreshing()
@@ -217,6 +323,11 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         if (mTargetPull) {
             mCurrentTargetOffsetTop = progressViewStartOffset
             requestLayout()
+        }
+
+        if (mRemindView != null) {
+            mRemindView?.clearAnimation()
+            mRemindView?.visibility = View.GONE
         }
     }
 
@@ -271,6 +382,15 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         mTargetPullMarginTop = marginTop
     }
 
+    fun setShowRemind(show: Boolean = true, message: String = "") {
+        mShowRemind = show
+        mRemindMessage = message
+    }
+
+    fun setRemindTime(time: Long) {
+        mRemindTime = time
+    }
+
     /**
      * The refresh indicator resting position is always positioned near the top
      * of the refreshing content. This position is a consistent location, but
@@ -290,11 +410,8 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         mProgressView.invalidate()
     }
 
-    /**
-     * One of DEFAULT, or LARGE.
-     */
-    fun setSize(size: Int) {
-        mProgressView.setSize(size)
+    fun setProgressStyle(size: Int) {
+        mProgressView.setStyle(size)
     }
 
     init {
@@ -339,10 +456,13 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
 
     protected abstract fun createProgressView(): ProgressView
 
+    protected open fun createRemindView(): RemindView? = null
+
     /**
      * Set the listener to be notified when a refresh is triggered via the swipe
      * gesture.
      */
+
     fun setOnRefreshListener(listener: OnRefreshListener?) {
         mListener = listener
     }
@@ -445,10 +565,22 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         if (mTarget == null) {
             for (i in 0 until childCount) {
                 val child = getChildAt(i)
-                if (child != mProgressView) {
+                if (child != mProgressView && child != mRemindView) {
                     mTarget = child
                     break
                 }
+            }
+        }
+    }
+
+    private fun ensureRemind() {
+        if (mRemindView == null) {
+            mRemindView = createRemindView()
+
+            mRemindView?.let {
+                addView(it)
+                remindViewStartOffset = -(mRemindView?.viewHeight ?: 0)
+                remindViewEndOffset = 0
             }
         }
     }
@@ -484,6 +616,11 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         var fixChildTop = mCurrentTargetOffsetTop + progressViewHeight + mTargetPullMarginTop;
         if (!mTargetPull || fixChildTop < 0) fixChildTop = 0
 
+        if (mCurrentRemindOffsetTop != null && mRemindView != null) {
+            var fixChildTop2 = (mCurrentRemindOffsetTop ?: 0) + (mRemindView?.viewHeight ?: 0)
+            if (fixChildTop2 < 0) fixChildTop2 = 0
+            if (fixChildTop2 > fixChildTop) fixChildTop = fixChildTop2
+        }
         val childTop = paddingTop + fixChildTop
         val childWidth = width - paddingLeft - paddingRight
         val childHeight = height - paddingTop - paddingBottom
@@ -492,6 +629,13 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         mProgressView.layout(
             width / 2 - progressViewWidth / 2, mCurrentTargetOffsetTop,
             width / 2 + progressViewWidth / 2, mCurrentTargetOffsetTop + progressViewHeight
+        )
+
+        val remindViewWidth = mRemindView?.measuredWidth ?: 0
+        val remindViewHeight = mRemindView?.measuredHeight ?: 0
+        mRemindView?.layout(
+            width / 2 - remindViewWidth / 2, mCurrentRemindOffsetTop ?: 0,
+            width / 2 + remindViewWidth / 2, (mCurrentRemindOffsetTop ?: 0) + remindViewHeight
         )
     }
 
@@ -503,7 +647,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         if (mTarget == null) {
             return
         }
-        mTarget!!.measure(
+        mTarget?.measure(
             View.MeasureSpec.makeMeasureSpec(
                 measuredWidth - paddingLeft - paddingRight,
                 View.MeasureSpec.EXACTLY
@@ -511,6 +655,12 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
                 measuredHeight - paddingTop - paddingBottom, View.MeasureSpec.EXACTLY
             )
         )
+
+        mRemindView?.measure(
+            View.MeasureSpec.makeMeasureSpec(mRemindView?.viewWidth ?: 0, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(mRemindView?.viewHeight ?: 0, View.MeasureSpec.EXACTLY)
+        )
+
         mProgressView.measure(
             View.MeasureSpec.makeMeasureSpec(mProgressView.viewWidth, View.MeasureSpec.EXACTLY),
             View.MeasureSpec.makeMeasureSpec(mProgressView.viewHeight, View.MeasureSpec.EXACTLY)
@@ -531,11 +681,11 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
      */
     fun canChildScrollUp(): Boolean {
         if (mChildScrollUpCallback != null) {
-            return mChildScrollUpCallback!!.canChildScrollUp(this, mTarget)
+            return mChildScrollUpCallback?.canChildScrollUp(this, mTarget) ?: false
         }
         return if (mTarget is ListView) {
             ListViewCompat.canScrollList((mTarget as ListView?)!!, -1)
-        } else mTarget!!.canScrollVertically(-1)
+        } else mTarget?.canScrollVertically(-1) ?: false
     }
 
     /**
@@ -543,7 +693,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
      * callback will return the value provided by the callback and ignore all internal logic.
      * @param callback Callback that should be called when canChildScrollUp() is called.
      */
-    fun setOnChildScrollUpCallback(callback: OnChildScrollUpCallback<ProgressView>?) {
+    fun setOnChildScrollUpCallback(callback: OnChildScrollUpCallback<ProgressView, RemindView>?) {
         mChildScrollUpCallback = callback
     }
 
@@ -959,8 +1109,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
     }
 
     internal fun moveToStart(interpolatedTime: Float) {
-        var targetTop = 0
-        targetTop = mFrom + ((progressViewStartOffset - mFrom) * interpolatedTime).toInt()
+        var targetTop = mFrom + ((progressViewStartOffset - mFrom) * interpolatedTime).toInt()
         val offset = targetTop - mProgressView.top
         setTargetOffsetTopAndBottom(offset)
     }
@@ -992,6 +1141,14 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         mCurrentTargetOffsetTop = mProgressView.top
     }
 
+    internal fun setRemindOffsetTopAndBottom(offset: Int) {
+        if (mRemindView != null) {
+            mRemindView?.bringToFront()
+            ViewCompat.offsetTopAndBottom(mRemindView, offset)
+            mCurrentRemindOffsetTop = mRemindView?.top
+        }
+    }
+
     private fun onSecondaryPointerUp(ev: MotionEvent) {
         val pointerIndex = ev.actionIndex
         val pointerId = ev.getPointerId(pointerIndex)
@@ -1018,8 +1175,11 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
      * Classes that wish to override [AbsSwipeRefreshLayout.canChildScrollUp] method
      * behavior should implement this interface.
      */
-    interface OnChildScrollUpCallback<ProgressView> where ProgressView : View,
-                                                          ProgressView : SwipeRefreshProgress {
+    interface OnChildScrollUpCallback<ProgressView, RemindView>
+            where ProgressView : View,
+                  ProgressView : SwipeRefreshProgress,
+                  RemindView : View,
+                  RemindView : SwipeRefreshRemind {
         /**
          * Callback that will be called when [AbsSwipeRefreshLayout.canChildScrollUp] method
          * is called to allow the implementer to override its behavior.
@@ -1029,31 +1189,26 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
          *
          * @return Whether it is possible for the child view of parent layout to scroll up.
          */
-        fun canChildScrollUp(parent: AbsSwipeRefreshLayout<ProgressView>, child: View?): Boolean
+        fun canChildScrollUp(
+            parent: AbsSwipeRefreshLayout<ProgressView, RemindView>,
+            child: View?
+        ): Boolean
     }
 
     companion object {
-        // Maps to ProgressBar.Large style
-        val LARGE = CircularProgressDrawable.LARGE
-        // Maps to ProgressBar default style
-        val DEFAULT = CircularProgressDrawable.DEFAULT
 
-        private const val MAX_ALPHA = 255
-        private const val STARTING_PROGRESS_ALPHA = (.3f * MAX_ALPHA).toInt()
-
-        private val LOG_TAG = AbsSwipeRefreshLayout::class.java!!.getSimpleName()
-
+        private val LOG_TAG = AbsSwipeRefreshLayout::class.java?.getSimpleName()
 
         private const val DECELERATE_INTERPOLATION_FACTOR = 2f
         private const val INVALID_POINTER = -1
         private const val DRAG_RATE = .5f
 
-
         private const val SCALE_DOWN_DURATION = 150
-
         private const val ANIMATE_TO_TRIGGER_DURATION = 200
-
         private const val ANIMATE_TO_START_DURATION = 200
+        private const val ANIMATE_TO_REMIND_DURATION = 200
+        private const val REMIND_DURATION = 2000L
+        private const val ANIMATE_TO_REMIND_START_DURATION = 200
 
 
         // Default offset in dips from the top of the view to where the progress spinner should stop

@@ -801,7 +801,7 @@ class CircularProgressDrawable
         private val MATERIAL_INTERPOLATOR = FastOutSlowInInterpolator()
 
         /** Maps to ProgressBar.Large style.  */
-        const val LARGE = 0
+        const val LARGE = 1
 
         private val CENTER_RADIUS_LARGE = 11f
         private val STROKE_WIDTH_LARGE = 3f
@@ -809,7 +809,7 @@ class CircularProgressDrawable
         private val ARROW_HEIGHT_LARGE = 6
 
         /** Maps to ProgressBar default style.  */
-        const val DEFAULT = 1
+        const val DEFAULT = 0
 
         private val CENTER_RADIUS = 7.5f
         private val STROKE_WIDTH = 2.5f

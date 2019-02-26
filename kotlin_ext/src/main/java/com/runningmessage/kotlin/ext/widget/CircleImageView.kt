@@ -192,22 +192,29 @@ class CircleImageView(context: Context, color: Int) : ImageView(context),
     private var mAlphaStartAnimation: Animation? = null
     private var mAlphaMaxAnimation: Animation? = null
 
-    override fun setSize(size: Int) {
-        if (size != CircularProgressDrawable.LARGE && size != CircularProgressDrawable.DEFAULT) {
-            return
+    override fun setStyle(style: Int) {
+
+        parseStyle(style).forEach { styleItem ->
+            if (styleItem and STYLE_MASK_SIZE != 0) {
+                val progressStyle =
+                    if (styleItem == STYLE_LARGE) CircularProgressDrawable.LARGE else CircularProgressDrawable.DEFAULT
+
+                val metrics = resources.displayMetrics
+                progressCircleDiameter = if (progressStyle == CircularProgressDrawable.LARGE) {
+                    (CIRCLE_DIAMETER_LARGE * metrics.density).toInt()
+                } else {
+                    (CIRCLE_DIAMETER * metrics.density).toInt()
+                }
+                // force the bounds of the progress circle inside the circle view to
+                // update by setting it to null before updating its size and then
+                // re-setting it
+                setImageDrawable(null)
+                mProgress?.setStyle(progressStyle)
+                setImageDrawable(mProgress)
+            }
         }
-        val metrics = resources.displayMetrics
-        progressCircleDiameter = if (size == CircularProgressDrawable.LARGE) {
-            (CIRCLE_DIAMETER_LARGE * metrics.density).toInt()
-        } else {
-            (CIRCLE_DIAMETER * metrics.density).toInt()
-        }
-        // force the bounds of the progress circle inside the circle view to
-        // update by setting it to null before updating its size and then
-        // re-setting it
-        setImageDrawable(null)
-        mProgress?.setStyle(size)
-        setImageDrawable(mProgress)
+
+
     }
 
     /**
@@ -238,15 +245,9 @@ class CircleImageView(context: Context, color: Int) : ImageView(context),
     override val viewHeight: Int
         get() = progressCircleDiameter
 
-    override var progressAlpha: Int
-        get() = mProgress.alpha
-        set(alpha) {
-            mProgress.alpha = alpha
-        }
-
     override fun autoToAnimRefreshing(listener: Animation.AnimationListener?) {
         visibility = View.VISIBLE
-        progressAlpha = MAX_ALPHA
+        mProgress.alpha = MAX_ALPHA
         mScaleAnimation = object : Animation() {
             public override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
                 scaleX = interpolatedTime
@@ -293,12 +294,15 @@ class CircleImageView(context: Context, color: Int) : ImageView(context),
 
 
         if (overscrollTop < totalDragDistance) {
-            if (progressAlpha > STARTING_PROGRESS_ALPHA && !isAnimationRunning(mAlphaStartAnimation)) {
+            if (mProgress.alpha > STARTING_PROGRESS_ALPHA && !isAnimationRunning(
+                    mAlphaStartAnimation
+                )
+            ) {
                 // Animate the alpha
                 startProgressAlphaStartAnimation()
             }
         } else {
-            if (progressAlpha < MAX_ALPHA && !isAnimationRunning(mAlphaMaxAnimation)) {
+            if (mProgress.alpha < MAX_ALPHA && !isAnimationRunning(mAlphaMaxAnimation)) {
                 // Animate the alpha
                 startProgressAlphaMaxAnimation()
             }
@@ -319,14 +323,14 @@ class CircleImageView(context: Context, color: Int) : ImageView(context),
     private fun startProgressAlphaStartAnimation() {
         mAlphaStartAnimation =
                 startAlphaAnimation(
-                    progressAlpha,
+                    mProgress.alpha,
                     STARTING_PROGRESS_ALPHA
                 )
     }
 
     private fun startProgressAlphaMaxAnimation() {
         mAlphaMaxAnimation = startAlphaAnimation(
-            progressAlpha,
+            mProgress.alpha,
             MAX_ALPHA
         )
     }
@@ -334,7 +338,7 @@ class CircleImageView(context: Context, color: Int) : ImageView(context),
     private fun startAlphaAnimation(startingAlpha: Int, endingAlpha: Int): Animation {
         val alpha = object : Animation() {
             public override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
-                progressAlpha =
+                mProgress.alpha =
                         (startingAlpha + (endingAlpha - startingAlpha) * interpolatedTime).toInt()
             }
         }
@@ -346,8 +350,8 @@ class CircleImageView(context: Context, color: Int) : ImageView(context),
         return alpha
     }
 
-    override fun finishSpinner(overscrollTop: Float, mTotalDragDistance: Float) {
-        if (overscrollTop > mTotalDragDistance) {
+    override fun finishSpinner(overscrollTop: Float, totalDragDistance: Float) {
+        if (overscrollTop > totalDragDistance) {
 
         } else {
             mProgress.setStartEndTrim(0f, 0f)
