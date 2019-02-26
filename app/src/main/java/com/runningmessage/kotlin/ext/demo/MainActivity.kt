@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import com.runningmessage.kotlin.ext.widget.AbsSwipeRefreshLayout
+import com.runningmessage.kotlin.ext.widget.dip2px
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.random.Random.Default.nextInt
 
@@ -54,7 +55,9 @@ class MainActivity : AppCompatActivity() {
 
         }
         npRecyclerView.adapter = adapter
-        npRefreshLayout.setProgressScale(true)
+        npRefreshLayout.setProgressViewEndTarget(true, dip2px(applicationContext, 32f))
+        npRefreshLayout.setDistanceToTriggerSync(dip2px(applicationContext, 80f))
+        npRefreshLayout.setTargetPull(true, dip2px(applicationContext, 4f))
 
         npRefreshLayout.postDelayed({ npRefreshLayout.isRefreshing = true }, 1000)
         npRefreshLayout.postDelayed({ npRefreshLayout.isRefreshing = false }, 5000)

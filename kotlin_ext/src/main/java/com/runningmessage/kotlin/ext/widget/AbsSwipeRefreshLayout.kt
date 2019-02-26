@@ -93,14 +93,17 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
     private var mActivePointerId = INVALID_POINTER
     // Whether this item is scaled up rather than clipped
     internal var mScale: Boolean = false
+    // Whether the target pull follow spinner when pulling
+    private var mTargetPull: Boolean = false
+    private var mTargetPullMarginTop = 0
 
     // Target is returning to its start offset because it was cancelled or a
     // refresh was triggered.
     private var mReturningToStart: Boolean = false
     private val mDecelerateInterpolator: DecelerateInterpolator
 
-    internal lateinit var mCircleView: ProgressView
-    private var mCircleViewIndex = -1
+    internal lateinit var mProgressView: ProgressView
+    private var mProgressViewIndex = -1
 
     protected var mFrom: Int = 0
 
@@ -139,12 +142,12 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         override fun onAnimationEnd(animation: Animation?) {
             if (mRefreshing) {
 
-                mCircleView.startAnimRefreshing()
+                mProgressView.startAnimRefreshing()
 
                 if (mNotify) {
                     mListener?.onRefresh()
                 }
-                mCurrentTargetOffsetTop = mCircleView.top
+                mCurrentTargetOffsetTop = mProgressView.top
             } else {
                 reset()
             }
@@ -173,7 +176,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
             }
             setTargetOffsetTopAndBottom(endTarget - mCurrentTargetOffsetTop)
             mNotify = false
-            mCircleView.autoToAnimRefreshing(mRefreshListener)
+            mProgressView.autoToAnimRefreshing(mRefreshListener)
         } else {
             setRefreshing(refreshing, false)
         }
@@ -186,9 +189,9 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
                 progressViewEndOffset
             }
             var targetTop = mFrom + ((endTarget - mFrom) * interpolatedTime).toInt()
-            val offset = targetTop - mCircleView.top
+            val offset = targetTop - mProgressView.top
             setTargetOffsetTopAndBottom(offset)
-            mCircleView.releaseToAnimRefreshing(interpolatedTime)
+            mProgressView.releaseToAnimRefreshing(interpolatedTime)
         }
     }
 
@@ -199,17 +202,22 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
     }
 
     internal fun reset() {
-        mCircleView.clearAnimation()
-        mCircleView.stopAnimRefreshing()
-        mCircleView.visibility = View.GONE
+        mProgressView.clearAnimation()
+        mProgressView.stopAnimRefreshing()
+        mProgressView.visibility = View.GONE
 
-        // Return the circle to its start position
+        // Return the progress view to its start position
         if (mScale) {
             setAnimationProgress(0f /* animation complete and view is hidden */)
         } else {
             setTargetOffsetTopAndBottom(progressViewStartOffset - mCurrentTargetOffsetTop)
         }
-        mCurrentTargetOffsetTop = mCircleView.top
+        mCurrentTargetOffsetTop = mProgressView.top
+
+        if (mTargetPull) {
+            mCurrentTargetOffsetTop = progressViewStartOffset
+            requestLayout()
+        }
     }
 
     override fun setEnabled(enabled: Boolean) {
@@ -255,7 +263,12 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
 
     fun setProgressScale(scale: Boolean) {
         mScale = scale
-        mCircleView.invalidate()
+        mProgressView.invalidate()
+    }
+
+    fun setTargetPull(pull: Boolean, marginTop: Int = 0) {
+        mTargetPull = pull
+        mTargetPullMarginTop = marginTop
     }
 
     /**
@@ -274,14 +287,14 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
     fun setProgressViewEndTarget(scale: Boolean, end: Int) {
         progressViewEndOffset = end
         mScale = scale
-        mCircleView.invalidate()
+        mProgressView.invalidate()
     }
 
     /**
      * One of DEFAULT, or LARGE.
      */
     fun setSize(size: Int) {
-        mCircleView.setSize(size)
+        mProgressView.setSize(size)
     }
 
     init {
@@ -291,19 +304,19 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
 
         val metrics = resources.displayMetrics
 
-        mCircleView = createProgressView()
-        addView(mCircleView)
+        mProgressView = createProgressView()
+        addView(mProgressView)
 
         isChildrenDrawingOrderEnabled = true
-        // the absolute offset has to take into account that the circle starts at an offset
-        progressViewEndOffset = (DEFAULT_CIRCLE_TARGET * metrics.density).toInt()
+        // the absolute offset has to take into account that the progress view starts at an offset
+        progressViewEndOffset = (DEFAULT_PROGRESS_END_OFFSET * metrics.density).toInt()
         mTotalDragDistance = progressViewEndOffset.toFloat()
         mNestedScrollingParentHelper = NestedScrollingParentHelper(this)
 
         mNestedScrollingChildHelper = NestedScrollingChildHelper(this)
         isNestedScrollingEnabled = true
 
-        mCurrentTargetOffsetTop = -mCircleView.viewHeight
+        mCurrentTargetOffsetTop = -mProgressView.viewHeight
         progressViewStartOffset = mCurrentTargetOffsetTop
         moveToStart(1.0f)
 
@@ -313,17 +326,14 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
     }
 
     override fun getChildDrawingOrder(childCount: Int, i: Int): Int {
-        return if (mCircleViewIndex < 0) {
-            i
-        } else if (i == childCount - 1) {
-            // Draw the selected child last
-            mCircleViewIndex
-        } else if (i >= mCircleViewIndex) {
-            // Move the children after the selected child earlier one
-            i + 1
-        } else {
-            // Keep the children before the selected child the same
-            i
+        return when {
+            mProgressViewIndex < 0 -> i
+            i == childCount - 1 -> // Draw the selected child last
+                mProgressViewIndex
+            i >= mProgressViewIndex -> // Move the children after the selected child earlier one
+                i + 1
+            else -> // Keep the children before the selected child the same
+                i
         }
     }
 
@@ -342,8 +352,8 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
      * @param progress
      */
     internal fun setAnimationProgress(progress: Float) {
-        mCircleView.scaleX = progress
-        mCircleView.scaleY = progress
+        mProgressView.scaleX = progress
+        mProgressView.scaleY = progress
     }
 
     private fun setRefreshing(refreshing: Boolean, notify: Boolean) {
@@ -366,9 +376,9 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
             }
         }
         mScaleDownAnimation?.duration = SCALE_DOWN_DURATION.toLong()
-        mCircleView.setAnimationListener(listener)
-        mCircleView.clearAnimation()
-        mCircleView.startAnimation(mScaleDownAnimation)
+        mProgressView.setAnimationListener(listener)
+        mProgressView.clearAnimation()
+        mProgressView.startAnimation(mScaleDownAnimation)
     }
 
     @Deprecated("Use {@link #setProgressBackgroundColorSchemeResource(int)}")
@@ -391,7 +401,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
      * @param color
      */
     fun setProgressBackgroundColorSchemeColor(@ColorInt color: Int) {
-        mCircleView.setBackgroundColor(color)
+        mProgressView.setBackgroundColor(color)
     }
 
 
@@ -435,7 +445,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         if (mTarget == null) {
             for (i in 0 until childCount) {
                 val child = getChildAt(i)
-                if (child != mCircleView) {
+                if (child != mProgressView) {
                     mTarget = child
                     break
                 }
@@ -464,17 +474,24 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         if (mTarget == null) {
             return
         }
+
+        val progressViewWidth = mProgressView.measuredWidth
+        val progressViewHeight = mProgressView.measuredHeight
+
         val child = mTarget
         val childLeft = paddingLeft
-        val childTop = paddingTop
+
+        var fixChildTop = mCurrentTargetOffsetTop + progressViewHeight + mTargetPullMarginTop;
+        if (!mTargetPull || fixChildTop < 0) fixChildTop = 0
+
+        val childTop = paddingTop + fixChildTop
         val childWidth = width - paddingLeft - paddingRight
         val childHeight = height - paddingTop - paddingBottom
-        child!!.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight)
-        val circleWidth = mCircleView.measuredWidth
-        val circleHeight = mCircleView.measuredHeight
-        mCircleView.layout(
-            width / 2 - circleWidth / 2, mCurrentTargetOffsetTop,
-            width / 2 + circleWidth / 2, mCurrentTargetOffsetTop + circleHeight
+        child?.layout(childLeft, childTop, childLeft + childWidth, childTop + childHeight)
+
+        mProgressView.layout(
+            width / 2 - progressViewWidth / 2, mCurrentTargetOffsetTop,
+            width / 2 + progressViewWidth / 2, mCurrentTargetOffsetTop + progressViewHeight
         )
     }
 
@@ -494,15 +511,15 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
                 measuredHeight - paddingTop - paddingBottom, View.MeasureSpec.EXACTLY
             )
         )
-        mCircleView.measure(
-            View.MeasureSpec.makeMeasureSpec(mCircleView.viewWidth, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(mCircleView.viewHeight, View.MeasureSpec.EXACTLY)
+        mProgressView.measure(
+            View.MeasureSpec.makeMeasureSpec(mProgressView.viewWidth, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(mProgressView.viewHeight, View.MeasureSpec.EXACTLY)
         )
-        mCircleViewIndex = -1
-        // Get the index of the circleview.
+        mProgressViewIndex = -1
+        // Get the index of the progress view.
         for (index in 0 until childCount) {
-            if (getChildAt(index) === mCircleView) {
-                mCircleViewIndex = index
+            if (getChildAt(index) === mProgressView) {
+                mProgressViewIndex = index
                 break
             }
         }
@@ -549,7 +566,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
 
         when (action) {
             MotionEvent.ACTION_DOWN -> {
-                setTargetOffsetTopAndBottom(progressViewStartOffset - mCircleView.top)
+                setTargetOffsetTopAndBottom(progressViewStartOffset - mProgressView.top)
                 mActivePointerId = ev.getPointerId(0)
                 mIsBeingDragged = false
 
@@ -629,14 +646,14 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
             moveSpinner(mTotalUnconsumed)
         }
 
-        // If a client layout is using a custom start position for the circle
+        // If a client layout is using a custom start position for the progress
         // view, they mean to hide it again before scrolling the child view
         // If we get back to mTotalUnconsumed == 0 and there is more to go, hide
-        // the circle so it isn't exposed if its blocking content is moved
+        // the progress so it isn't exposed if its blocking content is moved
         if (mUsingCustomStart && dy > 0 && mTotalUnconsumed == 0f
             && Math.abs(dy - consumed[1]) > 0
         ) {
-            mCircleView.visibility = View.GONE
+            mProgressView.visibility = View.GONE
         }
 
         // Now let our nested parent consume the leftovers
@@ -775,20 +792,20 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
 
         val targetY = progressViewStartOffset + (slingshotDist * dragPercent + extraMove).toInt()
 
-        // where 1.0f is a full circle
-        if (mCircleView.visibility != View.VISIBLE) {
-            mCircleView.visibility = View.VISIBLE
+        // where 1.0f is a full progress
+        if (mProgressView.visibility != View.VISIBLE) {
+            mProgressView.visibility = View.VISIBLE
         }
         if (!mScale) {
-            mCircleView.scaleX = 1f
-            mCircleView.scaleY = 1f
+            mProgressView.scaleX = 1f
+            mProgressView.scaleY = 1f
         }
 
         if (mScale) {
             setAnimationProgress(Math.min(1f, overscrollTop / mTotalDragDistance))
         }
 
-        mCircleView.moveSpinner(
+        mProgressView.moveSpinner(
             overscrollTop,
             mTotalDragDistance,
             adjustedPercent,
@@ -824,7 +841,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
             }
             animateOffsetToStartPosition(mCurrentTargetOffsetTop, listener)
         }
-        mCircleView.finishSpinner(overscrollTop, mTotalDragDistance)
+        mProgressView.finishSpinner(overscrollTop, mTotalDragDistance)
     }
 
     override fun onTouchEvent(ev: MotionEvent): Boolean {
@@ -908,7 +925,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         if (yDiff > mTouchSlop && !mIsBeingDragged) {
             mInitialMotionY = mInitialDownY + mTouchSlop
             mIsBeingDragged = true
-            mCircleView.startDragging()
+            mProgressView.startDragging()
         }
     }
 
@@ -918,10 +935,10 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         mAnimateToCorrectPosition.duration = ANIMATE_TO_TRIGGER_DURATION.toLong()
         mAnimateToCorrectPosition.interpolator = mDecelerateInterpolator
         if (listener != null) {
-            mCircleView.setAnimationListener(listener)
+            mProgressView.setAnimationListener(listener)
         }
-        mCircleView.clearAnimation()
-        mCircleView.startAnimation(mAnimateToCorrectPosition)
+        mProgressView.clearAnimation()
+        mProgressView.startAnimation(mAnimateToCorrectPosition)
     }
 
     private fun animateOffsetToStartPosition(from: Int, listener: AnimationListener?) {
@@ -934,17 +951,17 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
             mAnimateToStartPosition.duration = ANIMATE_TO_START_DURATION.toLong()
             mAnimateToStartPosition.interpolator = mDecelerateInterpolator
             if (listener != null) {
-                mCircleView.setAnimationListener(listener)
+                mProgressView.setAnimationListener(listener)
             }
-            mCircleView.clearAnimation()
-            mCircleView.startAnimation(mAnimateToStartPosition)
+            mProgressView.clearAnimation()
+            mProgressView.startAnimation(mAnimateToStartPosition)
         }
     }
 
     internal fun moveToStart(interpolatedTime: Float) {
         var targetTop = 0
         targetTop = mFrom + ((progressViewStartOffset - mFrom) * interpolatedTime).toInt()
-        val offset = targetTop - mCircleView.top
+        val offset = targetTop - mProgressView.top
         setTargetOffsetTopAndBottom(offset)
     }
 
@@ -953,7 +970,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
         listener: Animation.AnimationListener?
     ) {
         mFrom = from
-        mStartingScale = mCircleView.scaleX
+        mStartingScale = mProgressView.scaleX
         mScaleDownToStartAnimation = object : Animation() {
             public override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
                 val targetScale = mStartingScale + -mStartingScale * interpolatedTime
@@ -961,18 +978,18 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
                 moveToStart(interpolatedTime)
             }
         }
-        mScaleDownToStartAnimation!!.duration = SCALE_DOWN_DURATION.toLong()
+        mScaleDownToStartAnimation?.duration = SCALE_DOWN_DURATION.toLong()
         if (listener != null) {
-            mCircleView.setAnimationListener(listener)
+            mProgressView.setAnimationListener(listener)
         }
-        mCircleView.clearAnimation()
-        mCircleView.startAnimation(mScaleDownToStartAnimation)
+        mProgressView.clearAnimation()
+        mProgressView.startAnimation(mScaleDownToStartAnimation)
     }
 
     internal fun setTargetOffsetTopAndBottom(offset: Int) {
-        mCircleView.bringToFront()
-        ViewCompat.offsetTopAndBottom(mCircleView, offset)
-        mCurrentTargetOffsetTop = mCircleView.top
+        mProgressView.bringToFront()
+        ViewCompat.offsetTopAndBottom(mProgressView, offset)
+        mCurrentTargetOffsetTop = mProgressView.top
     }
 
     private fun onSecondaryPointerUp(ev: MotionEvent) {
@@ -1040,7 +1057,8 @@ abstract class AbsSwipeRefreshLayout<ProgressView>
 
 
         // Default offset in dips from the top of the view to where the progress spinner should stop
-        private const val DEFAULT_CIRCLE_TARGET = 64
+        private const val DEFAULT_PROGRESS_END_OFFSET = 64
+
         private val LAYOUT_ATTRS = intArrayOf(android.R.attr.enabled)
     }
 }
