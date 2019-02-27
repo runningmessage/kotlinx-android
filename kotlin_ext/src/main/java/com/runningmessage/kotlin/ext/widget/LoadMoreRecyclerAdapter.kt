@@ -66,21 +66,21 @@ abstract class LoadMoreRecyclerAdapter<VHData : RecyclerView.ViewHolder, Data, V
         }
 
     final override fun getItemCount(): Int =
-        if (isLoadMoreEnable and (dataCount > 0)) dataCount + 1 else dataCount
+        if (isLoadMoreEnable && (dataCount > 0)) dataCount + 1 else dataCount
 
     fun getItem(position: Int): Data? = mDataList[position]
 
     fun addData(list: Collection<Data>, index: Int? = null) =
         when {
             index == null -> mDataList.addAll(list)
-            (index >= 0) and (index <= mDataList.size) -> mDataList.addAll(index, list)
+            (index >= 0) && (index <= mDataList.size) -> mDataList.addAll(index, list)
             else -> false
         }
 
     fun addData(data: Data, index: Int? = null) =
         when {
             index == null -> mDataList.add(data)
-            (index >= 0) and (index <= mDataList.size) -> {
+            (index >= 0) && (index <= mDataList.size) -> {
                 mDataList.add(index, data)
                 true
             }
