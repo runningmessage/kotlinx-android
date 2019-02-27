@@ -25,6 +25,9 @@ abstract class LoadMoreRecyclerAdapter<VHData : RecyclerView.ViewHolder, Data, V
     val dataCount
         get() = mDataList.size
 
+    val dataList
+        get() = mDataList
+
     private var mKeepRefRecyclerView: RecyclerView? = null
     private var mWeakRefRecyclerView: WeakReference<RecyclerView>? = null
     private var hasStartMonitor = false
