@@ -134,6 +134,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
     private var mScaleDownToStartAnimation: Animation? = null
 
     internal var mNotify: Boolean = false
+    private var mAutoNotify = false
 
     // Whether the client has set a custom starting position;
     internal var mUsingCustomStart: Boolean = false
@@ -156,7 +157,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
                 mProgressView.startAnimRefreshing()
 
                 if (mNotify) {
-                    mListener?.onRefresh()
+                    mListener?.onRefresh(mAutoNotify)
                 }
                 mCurrentTargetOffsetTop = mProgressView.top
             } else {
@@ -261,10 +262,20 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
             }
             setTargetOffsetTopAndBottom(endTarget - mCurrentTargetOffsetTop)
             mNotify = false
+            if (mAutoNotify) mNotify = true
             mProgressView.autoToAnimRefreshing(mRefreshListener)
         } else {
             setRefreshing(refreshing, false)
         }
+
+    /***
+     * @param refreshing see [isRefreshing]
+     * @param notify whether to notify the [OnRefreshListener] to call [OnRefreshListener.onRefresh]
+     */
+    fun notifyRefresh(refreshing: Boolean, notify: Boolean = false) {
+        mAutoNotify = notify
+        isRefreshing = refreshing
+    }
 
     private val mAnimateToCorrectPosition = object : Animation() {
         public override fun applyTransformation(interpolatedTime: Float, t: Transformation) {
@@ -476,7 +487,8 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
         mProgressView.scaleY = progress
     }
 
-    private fun setRefreshing(refreshing: Boolean, notify: Boolean) {
+    private fun setRefreshing(refreshing: Boolean, notify: Boolean, autoNotify: Boolean = false) {
+        mAutoNotify = autoNotify
         if (mRefreshing != refreshing) {
             mNotify = notify
             ensureTarget()
@@ -967,9 +979,9 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
         setTargetOffsetTopAndBottom(targetY - mCurrentTargetOffsetTop)
     }
 
-    private fun finishSpinner(overscrollTop: Float) {
+    private fun finishSpinner(overscrollTop: Float, autoNotify: Boolean = false) {
         if (overscrollTop > mTotalDragDistance) {
-            setRefreshing(true, true /* notify */)
+            setRefreshing(true, true /* notify */, autoNotify)
         } else {
             // cancel refresh
             mRefreshing = false
@@ -1168,7 +1180,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
         /**
          * Called when a swipe gesture triggers a refresh.
          */
-        fun onRefresh()
+        fun onRefresh(autoNotify: Boolean)
     }
 
     /**
