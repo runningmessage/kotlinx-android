@@ -178,6 +178,8 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
 
     private fun showRemind() {
 
+        isEnabled = false
+
         mProgressView.clearAnimation()
         mProgressView.stopAnimRefreshing()
         mProgressView.visibility = View.GONE
@@ -202,6 +204,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
                         override fun onAnimationEnd(animation: Animation?) {
                             mCurrentRemindOffsetTop = null
                             reset()
+                            isEnabled = true
                         }
 
                         override fun onAnimationStart(animation: Animation?) {
