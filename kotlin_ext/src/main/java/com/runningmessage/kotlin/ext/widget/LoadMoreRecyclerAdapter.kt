@@ -98,10 +98,10 @@ abstract class LoadMoreRecyclerAdapter<VHData : RecyclerView.ViewHolder, Data, V
 
     final override fun getItemViewType(position: Int): Int {
         return if (isFooter(position)) TYPE_FOOTER else
-            super.getItemViewType(position)
+            getItemDataViewType(position)
     }
 
-    abstract fun getItemDataViewType(): Int
+    abstract fun getItemDataViewType(position: Int): Int
 
     protected fun isFooter(position: Int) = isLoadMoreEnable && position >= itemCount - 1
 

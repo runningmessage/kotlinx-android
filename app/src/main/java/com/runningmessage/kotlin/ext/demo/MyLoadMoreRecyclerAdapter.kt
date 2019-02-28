@@ -35,7 +35,7 @@ class MyLoadMoreRecyclerAdapter(val context: Context) :
             }
         }
 
-    override fun getItemDataViewType(): Int {
+    override fun getItemDataViewType(position: Int): Int {
         return 0
     }
 
