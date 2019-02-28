@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         // set the refresh layout
         npRefreshLayout.setProgressViewEndTarget(true, dip2px(applicationContext, 32f))
         npRefreshLayout.setDistanceToTriggerSync(dip2px(applicationContext, 80f))
-        npRefreshLayout.setTargetPull(true, dip2px(applicationContext, 4f))
+        npRefreshLayout.setTargetPull(true)
 
         npRefreshLayout.setOnRefreshListener(object : AbsSwipeRefreshLayout.OnRefreshListener {
 

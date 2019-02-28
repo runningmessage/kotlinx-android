@@ -98,7 +98,6 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
     internal var mScale: Boolean = false
     // Whether the target pull follow spinner when pulling
     private var mTargetPull: Boolean = false
-    private var mTargetPullMarginTop = 0
 
     // Target is returning to its start offset because it was cancelled or a
     // refresh was triggered.
@@ -388,9 +387,8 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
         mProgressView.invalidate()
     }
 
-    fun setTargetPull(pull: Boolean, marginTop: Int = 0) {
+    fun setTargetPull(pull: Boolean) {
         mTargetPull = pull
-        mTargetPullMarginTop = marginTop
     }
 
     fun setShowRemind(show: Boolean = true, message: String = "") {
@@ -625,8 +623,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
         val child = mTarget
         val childLeft = paddingLeft
 
-        var fixChildTop = mCurrentTargetOffsetTop + progressViewHeight + mTargetPullMarginTop
-        if (mCurrentTargetOffsetTop <= progressViewStartOffset) fixChildTop = 0
+        var fixChildTop = mCurrentTargetOffsetTop + progressViewHeight
         if (!mTargetPull || fixChildTop < 0) fixChildTop = 0
 
         if (mCurrentRemindOffsetTop != null && mRemindView != null) {
