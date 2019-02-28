@@ -625,7 +625,8 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
         val child = mTarget
         val childLeft = paddingLeft
 
-        var fixChildTop = mCurrentTargetOffsetTop + progressViewHeight + mTargetPullMarginTop;
+        var fixChildTop = mCurrentTargetOffsetTop + progressViewHeight + mTargetPullMarginTop
+        if (mCurrentTargetOffsetTop <= progressViewStartOffset) fixChildTop = 0
         if (!mTargetPull || fixChildTop < 0) fixChildTop = 0
 
         if (mCurrentRemindOffsetTop != null && mRemindView != null) {

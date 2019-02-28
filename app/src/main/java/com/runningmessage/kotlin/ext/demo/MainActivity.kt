@@ -19,7 +19,6 @@ class MainActivity : AppCompatActivity() {
 
         // set the load more recycler adapter
         val adapter = MyLoadMoreRecyclerAdapter(applicationContext)
-        adapter.isLoadMoreEnable = false
         adapter.isAutoLoadMore = false
 
         adapter.onLoadMoreListener = object : LoadMoreRecyclerAdapter.OnLoadMoreListener {
@@ -63,27 +62,24 @@ class MainActivity : AppCompatActivity() {
         npRefreshLayout.setTargetPull(true, dip2px(applicationContext, 4f))
 
         npRefreshLayout.setOnRefreshListener(object : AbsSwipeRefreshLayout.OnRefreshListener {
-            override fun onRefresh() {
-                Toast.makeText(applicationContext, "pull refresh", Toast.LENGTH_SHORT).show()
+
+            override fun onRefresh(autoNotify: Boolean) {
+                adapter.isLoadMoreEnable = false
+                val message = if (autoNotify) "Auto Refresh Message" else "Swipe Refresh Message"
+                Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
 
                 npRefreshLayout.postDelayed({
-                    npRefreshLayout.setShowRemind(message = "Manual Refresh Message")
+                    npRefreshLayout.setShowRemind(message = message)
                     npRefreshLayout.isRefreshing = false
+                    adapter.isLoadMoreEnable = true
                 }, 3000)
-
             }
-
         })
 
         // simulate auto refresh when first enter
-        npRefreshLayout.postDelayed({ npRefreshLayout.isRefreshing = true }, 1000)
         npRefreshLayout.postDelayed({
-            npRefreshLayout.setShowRemind(message = "Auto Refresh Message")
-            npRefreshLayout.isRefreshing = false
-            adapter.isLoadMoreEnable = true
-        }, 5000)
-
-
+            npRefreshLayout.notifyRefresh(true, true)
+        }, 1000)
 
     }
 
