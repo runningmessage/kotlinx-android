@@ -21,7 +21,6 @@ import android.support.annotation.ColorInt
 import android.support.annotation.ColorRes
 import android.support.v4.content.ContextCompat
 import android.support.v4.view.*
-import android.support.v4.widget.ListViewCompat
 import android.util.AttributeSet
 import android.util.Log
 import android.view.MotionEvent
@@ -66,10 +65,10 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
  */
 @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
     ViewGroup(context, attrs), NestedScrollingParent, NestedScrollingChild
-        where ProgressView : View,
-              ProgressView : SwipeRefreshProgress,
-              RemindView : View,
-              RemindView : SwipeRefreshRemind {
+    where ProgressView : View,
+          ProgressView : SwipeRefreshProgress,
+          RemindView : View,
+          RemindView : SwipeRefreshRemind {
 
     private var mTarget: View? = null // the target of the gesture
     internal var mListener: OnRefreshListener? = null
@@ -142,6 +141,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
     private var mRemindMessage = ""
     private var mRemindView: RemindView? = null
     private var mRemindTime = REMIND_DURATION
+    private var mIsShowingRemind = false
 
     private var mChildScrollUpCallback: OnChildScrollUpCallback<ProgressView, RemindView>? = null
 
@@ -178,7 +178,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
 
     private fun showRemind() {
 
-        isEnabled = false
+        mIsShowingRemind = true
 
         mProgressView.clearAnimation()
         mProgressView.stopAnimRefreshing()
@@ -204,7 +204,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
                         override fun onAnimationEnd(animation: Animation?) {
                             mCurrentRemindOffsetTop = null
                             reset()
-                            isEnabled = true
+                            mIsShowingRemind = false
                         }
 
                         override fun onAnimationStart(animation: Animation?) {
@@ -262,9 +262,14 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
             } else {
                 progressViewEndOffset
             }
+            if (mScale) {
+                setAnimationProgress(1f)
+            }
+
             setTargetOffsetTopAndBottom(endTarget - mCurrentTargetOffsetTop)
             mNotify = false
             if (mAutoNotify) mNotify = true
+            mProgressView.visibility = View.VISIBLE
             mProgressView.autoToAnimRefreshing(mRefreshListener)
         } else {
             setRefreshing(refreshing, false)
@@ -275,6 +280,12 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
      * @param notify whether to notify the [OnRefreshListener] to call [OnRefreshListener.onRefresh]
      */
     fun notifyRefresh(refreshing: Boolean, notify: Boolean = false) {
+
+        if (!isEnabled || mReturningToStart || mRefreshing || mIsShowingRemind) {
+            // Fail fast if we're not in a state where a auto notify refresh is possible
+            return
+        }
+
         mAutoNotify = notify
         isRefreshing = refreshing
     }
@@ -665,13 +676,15 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
                 measuredWidth - paddingLeft - paddingRight,
                 View.MeasureSpec.EXACTLY
             ), View.MeasureSpec.makeMeasureSpec(
-                measuredHeight - paddingTop - paddingBottom, View.MeasureSpec.EXACTLY
-            )
+            measuredHeight - paddingTop - paddingBottom, View.MeasureSpec.EXACTLY
+        )
         )
 
         mRemindView?.measure(
-            View.MeasureSpec.makeMeasureSpec(mRemindView?.viewWidth ?: 0, View.MeasureSpec.EXACTLY),
-            View.MeasureSpec.makeMeasureSpec(mRemindView?.viewHeight ?: 0, View.MeasureSpec.EXACTLY)
+            View.MeasureSpec.makeMeasureSpec(mRemindView?.viewWidth
+                ?: 0, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(mRemindView?.viewHeight
+                ?: 0, View.MeasureSpec.EXACTLY)
         )
 
         mProgressView.measure(
@@ -783,7 +796,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
 
     override fun onStartNestedScroll(child: View, target: View, nestedScrollAxes: Int): Boolean {
         return (isEnabled && !mReturningToStart && !mRefreshing
-                && nestedScrollAxes and ViewCompat.SCROLL_AXIS_VERTICAL != 0)
+            && nestedScrollAxes and ViewCompat.SCROLL_AXIS_VERTICAL != 0)
     }
 
     override fun onNestedScrollAccepted(child: View, target: View, axes: Int) {
@@ -1016,7 +1029,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
         }
 
         if (!isEnabled || mReturningToStart || canChildScrollUp()
-            || mRefreshing || mNestedScrollInProgress
+            || mRefreshing || mNestedScrollInProgress || mIsShowingRemind
         ) {
             // Fail fast if we're not in a state where a swipe is possible
             return false
@@ -1189,10 +1202,10 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
      * behavior should implement this interface.
      */
     interface OnChildScrollUpCallback<ProgressView, RemindView>
-            where ProgressView : View,
-                  ProgressView : SwipeRefreshProgress,
-                  RemindView : View,
-                  RemindView : SwipeRefreshRemind {
+        where ProgressView : View,
+              ProgressView : SwipeRefreshProgress,
+              RemindView : View,
+              RemindView : SwipeRefreshRemind {
         /**
          * Callback that will be called when [AbsSwipeRefreshLayout.canChildScrollUp] method
          * is called to allow the implementer to override its behavior.
