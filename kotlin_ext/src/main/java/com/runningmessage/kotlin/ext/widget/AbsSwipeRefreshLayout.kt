@@ -155,10 +155,16 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
 
                 mProgressView.startAnimRefreshing()
 
-                if (mNotify) {
-                    mListener?.onRefresh(mAutoNotify)
-                }
                 mCurrentTargetOffsetTop = mProgressView.top
+
+                if (mNotify) {
+
+                    if (mListener == null) {
+                        isRefreshing = false
+                    } else {
+                        mListener?.onRefresh(mAutoNotify)
+                    }
+                }
             } else {
                 if (mShowRemind && mRemindMessage.isNotEmpty()) {
                     ensureRemind()
