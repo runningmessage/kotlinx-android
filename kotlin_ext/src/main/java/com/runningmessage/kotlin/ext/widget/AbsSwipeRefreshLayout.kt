@@ -879,7 +879,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
         // 'offset in window 'functionality to see if we have been moved from the event.
         // This is a decent indication of whether we should take over the event stream or not.
         val dy = dyUnconsumed + mParentOffsetInWindow[1]
-        if (dy < 0 && !canChildScrollUp()) {
+        if (dy < 0 && !canChildScrollUp() && !mIsShowingRemind) {
             mTotalUnconsumed += Math.abs(dy).toFloat()
             moveSpinner(mTotalUnconsumed)
         }
