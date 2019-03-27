@@ -194,36 +194,48 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
         mRemindView?.visibility = View.VISIBLE
         mRemindView?.message = mRemindMessage
         mRemindMessage = ""// only show once and clear the message
-        animateOffsetToRemindPosition(object : AnimationListener {
-            override fun onAnimationRepeat(animation: Animation?) {
 
-            }
+        val taskAfterAnim = Runnable {
 
-            override fun onAnimationEnd(animation: Animation?) {
-                mCurrentRemindOffsetTop = mRemindView?.top
-                postDelayed({
-                    animateOffsetToRemindStartPosition(object : AnimationListener {
-                        override fun onAnimationRepeat(animation: Animation?) {
+            mCurrentRemindOffsetTop = mRemindView?.top
+            postDelayed({
+                animateOffsetToRemindStartPosition(object : AnimationListener {
+                    override fun onAnimationRepeat(animation: Animation?) {
 
-                        }
+                    }
 
-                        override fun onAnimationEnd(animation: Animation?) {
-                            mCurrentRemindOffsetTop = null
-                            reset()
-                            mIsShowingRemind = false
-                        }
+                    override fun onAnimationEnd(animation: Animation?) {
+                        mCurrentRemindOffsetTop = null
+                        reset()
+                        mIsShowingRemind = false
+                    }
 
-                        override fun onAnimationStart(animation: Animation?) {
+                    override fun onAnimationStart(animation: Animation?) {
 
-                        }
-                    })
-                }, mRemindTime)
-            }
+                    }
+                })
+            }, mRemindTime)
 
-            override fun onAnimationStart(animation: Animation?) {
+        }
 
-            }
-        })
+        if (mRemindView?.customAnimShow(taskAfterAnim) != true) {
+            animateOffsetToRemindPosition(object : AnimationListener {
+                override fun onAnimationRepeat(animation: Animation?) {
+
+                }
+
+                override fun onAnimationEnd(animation: Animation?) {
+                    taskAfterAnim.run()
+                }
+
+                override fun onAnimationStart(animation: Animation?) {
+
+                }
+            })
+        } else {
+            setRemindOffsetTopAndBottom(remindViewEndOffset - (mRemindView?.top
+                    ?: remindViewEndOffset))
+        }
     }
 
     private fun animateOffsetToRemindPosition(listener: AnimationListener?) {

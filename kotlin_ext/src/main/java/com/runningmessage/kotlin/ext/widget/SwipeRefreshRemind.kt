@@ -15,4 +15,6 @@ interface SwipeRefreshRemind {
 
     val viewHeight: Int
 
+    fun customAnimShow(taskAfterAnim: Runnable): Boolean = false
+
 }
