@@ -759,7 +759,7 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
         }
 
         when (action) {
-            MotionEvent.ACTION_DOWN -> {
+            MotionEvent.ACTION_DOWN -> try {
                 setTargetOffsetTopAndBottom(progressViewStartOffset - mProgressView.top)
                 mActivePointerId = ev.getPointerId(0)
                 mIsBeingDragged = false
@@ -769,6 +769,8 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
                     return false
                 }
                 mInitialDownY = ev.getY(pointerIndex)
+            } catch (e: Throwable) {
+                // nothing to do
             }
 
             MotionEvent.ACTION_MOVE -> {
@@ -1054,9 +1056,11 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
         }
 
         when (action) {
-            MotionEvent.ACTION_DOWN -> {
+            MotionEvent.ACTION_DOWN -> try {
                 mActivePointerId = ev.getPointerId(0)
                 mIsBeingDragged = false
+            } catch (e: Throwable) {
+                // nothing to do
             }
 
             MotionEvent.ACTION_MOVE -> {
@@ -1087,7 +1091,11 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
                     )
                     return false
                 }
-                mActivePointerId = ev.getPointerId(pointerIndex)
+                try {
+                    mActivePointerId = ev.getPointerId(pointerIndex)
+                } catch (e: Throwable) {
+                    // nothing to do
+                }
             }
 
             MotionEvent.ACTION_POINTER_UP -> onSecondaryPointerUp(ev)
@@ -1194,13 +1202,17 @@ abstract class AbsSwipeRefreshLayout<ProgressView, RemindView>
     }
 
     private fun onSecondaryPointerUp(ev: MotionEvent) {
-        val pointerIndex = ev.actionIndex
-        val pointerId = ev.getPointerId(pointerIndex)
-        if (pointerId == mActivePointerId) {
-            // This was our active pointer going up. Choose a new
-            // active pointer and adjust accordingly.
-            val newPointerIndex = if (pointerIndex == 0) 1 else 0
-            mActivePointerId = ev.getPointerId(newPointerIndex)
+        try {
+            val pointerIndex = ev.actionIndex
+            val pointerId = ev.getPointerId(pointerIndex)
+            if (pointerId == mActivePointerId) {
+                // This was our active pointer going up. Choose a new
+                // active pointer and adjust accordingly.
+                val newPointerIndex = if (pointerIndex == 0) 1 else 0
+                mActivePointerId = ev.getPointerId(newPointerIndex)
+            }
+        } catch (e: Throwable) {
+            // nothing to do
         }
     }
 
