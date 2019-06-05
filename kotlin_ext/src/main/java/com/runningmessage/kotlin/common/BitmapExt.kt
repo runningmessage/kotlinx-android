@@ -135,12 +135,9 @@ fun Bitmap?.createRoundedCornerBitmap(
         canvas.drawRoundRect(rectF, rx, rx, paint)
         paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
 
-
-        var drawableBitmap = bitmap
+        var mDrawMatrix: Matrix? = null
 
         if (outWidth != srcWidth || outHeight != srcHeight) {
-
-            var mDrawMatrix: Matrix?
 
             Matrix().apply {
 
@@ -225,9 +222,10 @@ fun Bitmap?.createRoundedCornerBitmap(
                 }
 
             }
+        }
 
-            drawableBitmap =
-                    Bitmap.createBitmap(bitmap, 0, 0, srcWidth, srcHeight, mDrawMatrix, true)
+        if (mDrawMatrix != null) {
+            canvas.concat(mDrawMatrix)
         }
 
         val rectSrc = Rect(
@@ -238,7 +236,8 @@ fun Bitmap?.createRoundedCornerBitmap(
             0, 0, outWidth,
             outHeight
         )
-        canvas.drawBitmap(drawableBitmap, rectSrc, rectDst, paint)
+
+        canvas.drawBitmap(bitmap, rectSrc, rectDst, paint)
         return output
     } catch (e: Exception) {
         return bitmap
