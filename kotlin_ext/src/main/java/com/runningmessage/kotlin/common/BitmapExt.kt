@@ -21,17 +21,17 @@ const val CORNER_ALL            = 0b1111
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Retention(AnnotationRetention.SOURCE)
 @IntDef(
-    flag = true,
-    value = [CORNER_ALL.toLong(), CORNER_LEFT_TOP.toLong(), CORNER_RIGHT_TOP.toLong(), CORNER_RIGHT_BOTTOM.toLong(), CORNER_LEFT_BOTTOM.toLong()]
+        flag = true,
+        value = [CORNER_ALL.toLong(), CORNER_LEFT_TOP.toLong(), CORNER_RIGHT_TOP.toLong(), CORNER_RIGHT_BOTTOM.toLong(), CORNER_LEFT_BOTTOM.toLong()]
 )
 annotation class CornerPosition
 
 
 val sS2FArray = arrayOf(
-    Matrix.ScaleToFit.FILL,
-    Matrix.ScaleToFit.START,
-    Matrix.ScaleToFit.CENTER,
-    Matrix.ScaleToFit.END
+        Matrix.ScaleToFit.FILL,
+        Matrix.ScaleToFit.START,
+        Matrix.ScaleToFit.CENTER,
+        Matrix.ScaleToFit.END
 )
 
 fun scaleTypeToScaleToFit(st: ImageView.ScaleType): Matrix.ScaleToFit {
@@ -43,11 +43,11 @@ fun scaleTypeToScaleToFit(st: ImageView.ScaleType): Matrix.ScaleToFit {
 @JvmOverloads
 
 fun Bitmap?.createRoundedCornerBitmap(
-    @CornerPosition corners: Int = CORNER_ALL,
-    roundPx: Float? = null,
-    outputWidth: Int = 0,
-    outputHeight: Int = 0,
-    scaleType: ImageView.ScaleType = ImageView.ScaleType.CENTER_CROP, matrix: Matrix? = null
+        @CornerPosition corners: Int = CORNER_ALL,
+        roundPx: Float? = null,
+        outputWidth: Int = 0,
+        outputHeight: Int = 0,
+        scaleType: ImageView.ScaleType = ImageView.ScaleType.CENTER_CROP, matrix: Matrix? = null
 ): Bitmap? = this.let { bitmap ->
 
 
@@ -70,8 +70,8 @@ fun Bitmap?.createRoundedCornerBitmap(
         val outHeight = if (outputHeight > 0) outputHeight else srcHeight
 
         val output = Bitmap.createBitmap(
-            outWidth,
-            outHeight, Bitmap.Config.ARGB_8888
+                outWidth,
+                outHeight, Bitmap.Config.ARGB_8888
         )
         val canvas = Canvas(output)
         val paint = Paint()
@@ -79,53 +79,53 @@ fun Bitmap?.createRoundedCornerBitmap(
 
         val rectF: RectF = when (corners and CORNER_ALL) {
             CORNER_LEFT_TOP -> RectF(
-                Rect(
-                    0, 0, outWidth + rx.toInt() * 2,
-                    outHeight + rx.toInt() * 2
-                )
+                    Rect(
+                            0, 0, outWidth + rx.toInt() * 2,
+                            outHeight + rx.toInt() * 2
+                    )
             )
             CORNER_RIGHT_TOP -> RectF(
-                Rect(
-                    -rx.toInt() * 2, 0, outWidth,
-                    outHeight + rx.toInt() * 2
-                )
+                    Rect(
+                            -rx.toInt() * 2, 0, outWidth,
+                            outHeight + rx.toInt() * 2
+                    )
             )
             CORNER_RIGHT_BOTTOM -> RectF(
-                Rect(
-                    -rx.toInt() * 2, -rx.toInt() * 2, outWidth,
-                    outHeight
-                )
+                    Rect(
+                            -rx.toInt() * 2, -rx.toInt() * 2, outWidth,
+                            outHeight
+                    )
             )
             CORNER_LEFT_BOTTOM -> RectF(
-                Rect(
-                    -rx.toInt() * 2, 0, outWidth + rx.toInt() * 2,
-                    outHeight
-                )
+                    Rect(
+                            -rx.toInt() * 2, 0, outWidth + rx.toInt() * 2,
+                            outHeight
+                    )
             )
             CORNER_LEFT_TOP or CORNER_LEFT_BOTTOM -> RectF(
-                Rect(
-                    0, 0, outWidth + rx.toInt() * 2,
-                    outHeight
-                )
+                    Rect(
+                            0, 0, outWidth + rx.toInt() * 2,
+                            outHeight
+                    )
             )
             CORNER_LEFT_TOP or CORNER_RIGHT_TOP -> RectF(
-                Rect(
-                    0, 0, outWidth,
-                    outHeight + rx.toInt() * 2
-                )
+                    Rect(
+                            0, 0, outWidth,
+                            outHeight + rx.toInt() * 2
+                    )
             )
             CORNER_RIGHT_TOP or CORNER_RIGHT_BOTTOM -> RectF(
-                Rect(
-                    -rx.toInt() * 2, 0, outWidth,
-                    outHeight
-                )
+                    Rect(
+                            -rx.toInt() * 2, 0, outWidth,
+                            outHeight
+                    )
             )
 
             else -> RectF(
-                Rect(
-                    0, 0, outWidth,
-                    outHeight
-                )
+                    Rect(
+                            0, 0, outWidth,
+                            outHeight
+                    )
             )
         }
 
@@ -141,7 +141,7 @@ fun Bitmap?.createRoundedCornerBitmap(
 
             Matrix().apply {
 
-                /** copy from [android.widget.ImageView.configureBounds]*/
+                /** copy from [android.widget.ImageView].configureBounds*/
                 when (scaleType) {
                     ImageView.ScaleType.MATRIX -> // Use the specified matrix as-is.
                         mDrawMatrix = if (matrix?.isIdentity == true) {
@@ -153,8 +153,8 @@ fun Bitmap?.createRoundedCornerBitmap(
                         // Center bitmap in view, no scaling.
                         mDrawMatrix = this
                         mDrawMatrix?.setTranslate(
-                            Math.round((outWidth - srcWidth) * 0.5f).toFloat(),
-                            Math.round((outHeight - srcHeight) * 0.5f).toFloat()
+                                Math.round((outWidth - srcWidth) * 0.5f).toFloat(),
+                                Math.round((outHeight - srcHeight) * 0.5f).toFloat()
                         )
                     }
                     ImageView.ScaleType.CENTER_CROP -> {
@@ -174,8 +174,8 @@ fun Bitmap?.createRoundedCornerBitmap(
 
                         mDrawMatrix?.setScale(scale, scale)
                         mDrawMatrix?.postTranslate(
-                            Math.round(dx).toFloat(),
-                            Math.round(dy).toFloat()
+                                Math.round(dx).toFloat(),
+                                Math.round(dy).toFloat()
                         )
                     }
                     ImageView.ScaleType.CENTER_INSIDE -> {
@@ -188,8 +188,8 @@ fun Bitmap?.createRoundedCornerBitmap(
                             scale = 1.0f
                         } else {
                             scale = Math.min(
-                                outWidth.toFloat() / srcWidth.toFloat(),
-                                outHeight.toFloat() / srcHeight.toFloat()
+                                    outWidth.toFloat() / srcWidth.toFloat(),
+                                    outHeight.toFloat() / srcHeight.toFloat()
                             )
                         }
 
@@ -202,21 +202,21 @@ fun Bitmap?.createRoundedCornerBitmap(
                     else -> {
                         // Generate the required transform.
                         val mTempSrc =
-                            RectF().apply {
+                                RectF().apply {
 
-                                set(0f, 0f, srcWidth.toFloat(), srcHeight.toFloat())
-                            }
+                                    set(0f, 0f, srcWidth.toFloat(), srcHeight.toFloat())
+                                }
                         val mTempDst =
-                            RectF().apply {
+                                RectF().apply {
 
-                                set(0f, 0f, outWidth.toFloat(), outHeight.toFloat())
-                            }
+                                    set(0f, 0f, outWidth.toFloat(), outHeight.toFloat())
+                                }
 
                         mDrawMatrix = this
                         mDrawMatrix?.setRectToRect(
-                            mTempSrc,
-                            mTempDst,
-                            scaleTypeToScaleToFit(scaleType)
+                                mTempSrc,
+                                mTempDst,
+                                scaleTypeToScaleToFit(scaleType)
                         )
                     }
                 }
@@ -224,24 +224,15 @@ fun Bitmap?.createRoundedCornerBitmap(
             }
         }
 
+
         if (mDrawMatrix != null) {
-            canvas.concat(mDrawMatrix)
+            canvas.drawBitmap(bitmap, mDrawMatrix!!, paint)
+        } else {
+            canvas.drawBitmap(bitmap, 0f, 0f, paint)
         }
 
-        val rectSrc = Rect(
-            0, 0, outWidth,
-            outHeight
-        )
-        val rectDst = Rect(
-            0, 0, outWidth,
-            outHeight
-        )
-
-        canvas.drawBitmap(bitmap, rectSrc, rectDst, paint)
         return output
     } catch (e: Exception) {
         return bitmap
     }
-
-
 }
