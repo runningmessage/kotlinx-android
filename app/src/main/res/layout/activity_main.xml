@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <com.runningmessage.kotlin.ext.demo.MySwipeRefreshLayout
+    <com.runningmessage.kotlinx.demo.MySwipeRefreshLayout
         android:id="@+id/npRefreshLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -21,6 +21,6 @@
 
         </android.support.v7.widget.RecyclerView>
 
-    </com.runningmessage.kotlin.ext.demo.MySwipeRefreshLayout>
+    </com.runningmessage.kotlinx.demo.MySwipeRefreshLayout>
 
 </android.support.constraint.ConstraintLayout>
