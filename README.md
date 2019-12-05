@@ -1,5 +1,29 @@
 # kotlinx-android
 
+## How to use
+
+---  
+maven
+```maven
+    <dependency>
+        <groupId>com.runningmessage.kotlinx</groupId>
+        <artifactId>kotlinx-android</artifactId>
+        <version>0.0.2</version>
+        <type>pom</type>
+    </dependency>
+```
+---  
+gradle
+```gradle
+    compile 'com.runningmessage.kotlinx:kotlinx-android:0.0.2'
+```
+---  
+ivy
+```ivy
+    <dependency org="com.runningmessage.kotlinx" name="kotlinx-android" rev="0.0.2">
+	    <artifact name="kotlinx-android" ext="pom"></artifact>
+    </dependency>
+```
 ## widget
 AbsSwipeRefreshLayout<ProgressView, RemindView>:
 
@@ -60,21 +84,27 @@ ViewExt:
 
     View.layoutLeftMargin: 
     1. return the leftMargin of the layoutParams for the current View, if exists , otherwise return null
+    2. set the leftMargin of the layoutParams for the current View, and reset the layoutParams
     
     View.layoutRightMargin: 
     1. return the rightMargin of the layoutParams for the current View, if exists , otherwise return null
+    2. set the rightMargin of the layoutParams for the current View, and reset the layoutParams
     
     View.layoutTopMargin: 
     1. return the topMargin of the layoutParams for the current View, if exists , otherwise return null
+    2. set the topMargin of the layoutParams for the current View, and reset the layoutParams
     
     View.layoutBottomMargin: 
     1. return the bottomMargin of the layoutParams for the current View, if exists , otherwise return null
+    2. set the bottomMargin of the layoutParams for the current View, and reset the layoutParams
     
     View.layoutWidth: 
     1. return the width of the layoutParams for the current View, if exists , otherwise return null
+    2. set the width of the layoutParams for the current View, and reset the layoutParams
     
     View.layoutHeight: 
     1. return the height of the layoutParams for the current View, if exists , otherwise return null
+    2. set the height of the layoutParams for the current View, and reset the layoutParams
     
     
 NoLeakListenerFunction1:
