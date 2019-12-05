@@ -16,7 +16,10 @@ LoadMoreRecyclerAdapter<VHData : RecyclerView.ViewHolder, Data, VHFooter>:
 AndroidExt:
 
 ```java
-
+    
+    /** Do something depending on android sdk, for <b>compatibility</b> */
+    /** 判断安卓SDK版本后 执行代码,  <b>兼容性</b> */
+    
     fromSdk(16) {
         //do something if Build.VERSION.SDK_INT >= 16
     } other {
@@ -46,21 +49,35 @@ AndroidExt:
 BitmapExt:
 
     Bitmap?.createRoundedCornerBitmap
+    1. create a new rounded corner bitmap, basing on the current bitmap: 基于当前 Bitmap 创建一个带圆角的 Bitmap 
     
 TextViewExt:
 
     TextView.addEllipsis:
-    1. add "…" after the end of text
+    1. add "…" after the end of text: 在 TextView 显示的文本末尾添加省略号( … )
     
 ViewExt:
 
-    View.layoutLeftMargin
-    View.layoutRightMargin
-    View.layoutTopMargin
-    View.layoutBottomMargin
-    View.layoutWidth
-    View.layoutHeight
+    View.layoutLeftMargin: 
+    1. return the leftMargin of the layoutParams for the current View, if exists , otherwise return null
+    
+    View.layoutRightMargin: 
+    1. return the rightMargin of the layoutParams for the current View, if exists , otherwise return null
+    
+    View.layoutTopMargin: 
+    1. return the topMargin of the layoutParams for the current View, if exists , otherwise return null
+    
+    View.layoutBottomMargin: 
+    1. return the bottomMargin of the layoutParams for the current View, if exists , otherwise return null
+    
+    View.layoutWidth: 
+    1. return the width of the layoutParams for the current View, if exists , otherwise return null
+    
+    View.layoutHeight: 
+    1. return the height of the layoutParams for the current View, if exists , otherwise return null
+    
     
 NoLeakListenerFunction1:
 
-    wrap the Listener implementing interface , which only has one callback method, **Avoid Memory Leak!!!**   
+    wrap the Listener implementing interface , which only has one callback method, **Avoid Memory Leak !!!** 
+    包装 只实现 有一个单独方法的接口 的监听器， 并返回代理对象， ***避免内存泄漏 !!!***
