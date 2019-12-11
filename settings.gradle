@@ -1,1 +1,1 @@
-include ':app', ':kotlinx-android'
+include ':app', ':kotlinx-common', ':kotlinx-widget'

@@ -6,24 +6,36 @@
 maven
 ```maven
     <dependency>
-        <groupId>com.runningmessage.kotlinx</groupId>
-        <artifactId>kotlinx-android</artifactId>
-        <version>0.0.2</version>
+        <groupId>com.runningmessage.kotlinx-android</groupId>
+        <artifactId>kotlinx-common</artifactId>
+        <version>0.0.3</version>
+        <type>pom</type>
+    </dependency>
+    <dependency>
+        <groupId>com.runningmessage.kotlinx-android</groupId>
+        <artifactId>kotlinx-widget</artifactId>
+        <version>0.0.3</version>
         <type>pom</type>
     </dependency>
 ```
 ---  
 gradle
 ```gradle
-    compile 'com.runningmessage.kotlinx:kotlinx-android:0.0.2'
+    compile 'com.runningmessage.kotlinx-android:kotlinx-common:0.0.3'
+    compile 'com.runningmessage.kotlinx-android:kotlinx-widget:0.0.3'
 ```
 ---  
 ivy
 ```ivy
-    <dependency org="com.runningmessage.kotlinx" name="kotlinx-android" rev="0.0.2">
-	    <artifact name="kotlinx-android" ext="pom"></artifact>
+    <dependency org="com.runningmessage.kotlinx-android" name="kotlinx-common" rev="0.0.3">
+	    <artifact name="kotlinx-common" ext="pom"></artifact>
+    </dependency>
+    
+    <dependency org="com.runningmessage.kotlinx-android" name="kotlinx-widget" rev="0.0.3">
+	    <artifact name="kotlinx-widget" ext="pom"></artifact>
     </dependency>
 ```
+---  
 ## widget
 AbsSwipeRefreshLayout<ProgressView, RemindView>:
 

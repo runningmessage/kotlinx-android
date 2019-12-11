@@ -16,42 +16,42 @@ import com.runningmessage.kotlinx.widget.dip2px
  * Created by Lorss on 19-2-27.
  */
 class MyLoadMoreRecyclerAdapter(val context: Context) :
-    LoadMoreRecyclerAdapter<RecyclerView.ViewHolder, String, MyLoadMoreFooter>() {
+        LoadMoreRecyclerAdapter<RecyclerView.ViewHolder, String, MyLoadMoreFooter>() {
 
     override fun onCreateDataViewHolder(
-        parent: ViewGroup?,
-        viewType: Int
+            parent: ViewGroup?,
+            viewType: Int
     ): RecyclerView.ViewHolder =
-        object : RecyclerView.ViewHolder(TextView(context)) {}.apply {
+            object : RecyclerView.ViewHolder(TextView(context)) {}.apply {
 
-            val textView = this.itemView as? TextView
-            if (textView != null) {
-                textView.setBackgroundColor(Color.parseColor("#FFE2E2E2"))
-                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
-                textView.setTextColor(Color.parseColor("#FF333333"))
-                textView.height = 200
-                textView.width = ViewGroup.LayoutParams.MATCH_PARENT
-                textView.gravity = Gravity.CENTER
+                val textView = this.itemView as? TextView
+                if (textView != null) {
+                    textView.setBackgroundColor(Color.parseColor("#FFE2E2E2"))
+                    textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                    textView.setTextColor(Color.parseColor("#FF333333"))
+                    textView.height = 200
+                    textView.width = ViewGroup.LayoutParams.MATCH_PARENT
+                    textView.gravity = Gravity.CENTER
+                }
             }
-        }
 
     override fun getItemDataViewType(position: Int): Int {
         return 0
     }
 
     override fun onCreateFooter(): MyLoadMoreFooter =
-        MyLoadMoreFooter(TextView(context)).apply {
+            MyLoadMoreFooter(TextView(context)).apply {
 
-            val textView = this.itemView as? TextView
-            if (textView != null) {
-                textView.setBackgroundColor(Color.parseColor("#FFE2E2E2"))
-                textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
-                textView.setTextColor(Color.parseColor("#FF000000"))
-                textView.height = 200
-                textView.width = ViewGroup.LayoutParams.MATCH_PARENT
-                textView.gravity = Gravity.CENTER
+                val textView = this.itemView as? TextView
+                if (textView != null) {
+                    textView.setBackgroundColor(Color.parseColor("#FFE2E2E2"))
+                    textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                    textView.setTextColor(Color.parseColor("#FF000000"))
+                    textView.height = 200
+                    textView.width = ViewGroup.LayoutParams.MATCH_PARENT
+                    textView.gravity = Gravity.CENTER
+                }
             }
-        }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder?, position: Int) {
         val textView = (holder?.itemView as? TextView)

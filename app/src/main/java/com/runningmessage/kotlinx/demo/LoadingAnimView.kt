@@ -17,7 +17,7 @@ import com.runningmessage.kotlinx.widget.SwipeRefreshProgress
 import com.runningmessage.kotlinx.widget.dip2px
 
 class LoadingAnimView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
-    RelativeLayout(context), SwipeRefreshProgress {
+        RelativeLayout(context), SwipeRefreshProgress {
 
     private var mListener: Animation.AnimationListener? = null
 
@@ -65,11 +65,11 @@ class LoadingAnimView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     override fun moveSpinner(
-        overscrollTop: Float,
-        totalDragDistance: Float,
-        adjustedPercent: Float,
-        tensionPercent: Float,
-        targetY: Int
+            overscrollTop: Float,
+            totalDragDistance: Float,
+            adjustedPercent: Float,
+            tensionPercent: Float,
+            targetY: Int
     ) {
         stopFrame(overscrollTop / totalDragDistance)
     }

@@ -8,8 +8,8 @@ import com.runningmessage.kotlinx.widget.AbsSwipeRefreshLayout
  * Created by Lorss on 19-2-25.
  */
 class MySwipeRefreshLayout @JvmOverloads constructor(
-    context: Context,
-    attrs: AttributeSet? = null
+        context: Context,
+        attrs: AttributeSet? = null
 ) : AbsSwipeRefreshLayout<LoadingAnimView, SwipeRemindView>(context, attrs) {
 
     init {
