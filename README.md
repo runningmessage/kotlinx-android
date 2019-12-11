@@ -21,6 +21,18 @@ maven
 ---  
 gradle
 ```gradle
+
+    //project build.gradle
+    buildscript {
+        repositories {
+            ...
+            
+            //add the maven url
+            maven { url "https://dl.bintray.com/runningmessage/maven" }
+        }
+    }
+    
+    //app build.gradle
     compile 'com.runningmessage.kotlinx-android:kotlinx-common:0.0.3'
     compile 'com.runningmessage.kotlinx-android:kotlinx-widget:0.0.3'
 ```
