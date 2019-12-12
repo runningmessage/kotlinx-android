@@ -7,9 +7,9 @@ import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.animation.Animation
+import com.runningmessage.kotlinx.common.dpToPx
+import com.runningmessage.kotlinx.common.screenWidthX
 import com.runningmessage.kotlinx.widget.SwipeRefreshRemind
-import com.runningmessage.kotlinx.widget.dip2px
-import com.runningmessage.kotlinx.widget.getScreenWidth
 
 /**
  * Created by Lorss on 19-2-26.
@@ -48,8 +48,8 @@ class SwipeRemindView @JvmOverloads constructor(context: Context, attrs: Attribu
             text = value
         }
     override val viewWidth: Int
-        get() = getScreenWidth(context) - 100
+        get() = context.screenWidthX() - 100
     override val viewHeight: Int
-        get() = dip2px(context, 36f)
+        get() = context.dpToPx(36f)
 
 }

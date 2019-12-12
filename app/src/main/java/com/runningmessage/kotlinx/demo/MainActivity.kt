@@ -4,9 +4,9 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.StaggeredGridLayoutManager
 import android.widget.Toast
+import com.runningmessage.kotlinx.common.dpToPx
 import com.runningmessage.kotlinx.widget.AbsSwipeRefreshLayout
 import com.runningmessage.kotlinx.widget.LoadMoreRecyclerAdapter
-import com.runningmessage.kotlinx.widget.dip2px
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlin.random.Random.Default.nextInt
 
@@ -57,8 +57,8 @@ class MainActivity : AppCompatActivity() {
         npRecyclerView.itemAnimator = null
 
         // set the refresh layout
-        npRefreshLayout.setProgressViewEndTarget(true, dip2px(applicationContext, 32f))
-        npRefreshLayout.setDistanceToTriggerSync(dip2px(applicationContext, 80f))
+        npRefreshLayout.setProgressViewEndTarget(true, dpToPx(32f))
+        npRefreshLayout.setDistanceToTriggerSync(dpToPx(80f))
         npRefreshLayout.setTargetPull(true)
 
         npRefreshLayout.setOnRefreshListener(object : AbsSwipeRefreshLayout.OnRefreshListener {

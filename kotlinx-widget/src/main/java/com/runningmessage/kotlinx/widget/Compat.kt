@@ -7,7 +7,7 @@ import android.widget.ListView
  * Created by Lorss on 19-2-27.
  */
 
-class ListViewCompat {
+internal class ListViewCompat {
 
     companion object {
 
@@ -21,7 +21,7 @@ class ListViewCompat {
          * @see .scrollListBy
          */
         @JvmStatic
-        fun canScrollList(listView: ListView, direction: Int): Boolean {
+        internal fun canScrollList(listView: ListView, direction: Int): Boolean {
             if (Build.VERSION.SDK_INT >= 19) {
                 // Call the framework version directly
                 return listView.canScrollList(direction)

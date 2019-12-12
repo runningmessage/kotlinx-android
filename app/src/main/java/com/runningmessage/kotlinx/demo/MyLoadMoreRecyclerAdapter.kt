@@ -8,9 +8,9 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import com.runningmessage.kotlinx.common.dpToPx
 import com.runningmessage.kotlinx.widget.LoadMoreFooter
 import com.runningmessage.kotlinx.widget.LoadMoreRecyclerAdapter
-import com.runningmessage.kotlinx.widget.dip2px
 
 /**
  * Created by Lorss on 19-2-27.
@@ -58,7 +58,7 @@ class MyLoadMoreRecyclerAdapter(val context: Context) :
         val isFooter = isFooter(position)
         if (!isFooter) {
             textView?.text = getItem(position)
-            textView?.height = dip2px(context, 100f + (position * 5 % 30))
+            textView?.height = context.dpToPx(100f + (position * 5 % 30))
             textView?.width = ViewGroup.LayoutParams.MATCH_PARENT
         }
     }

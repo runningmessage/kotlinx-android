@@ -13,8 +13,8 @@ import android.util.AttributeSet
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.widget.RelativeLayout
+import com.runningmessage.kotlinx.common.dpToPx
 import com.runningmessage.kotlinx.widget.SwipeRefreshProgress
-import com.runningmessage.kotlinx.widget.dip2px
 
 class LoadingAnimView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) :
         RelativeLayout(context), SwipeRefreshProgress {
@@ -40,9 +40,9 @@ class LoadingAnimView @JvmOverloads constructor(context: Context, attrs: Attribu
     }
 
     override val viewWidth: Int
-        get() = dip2px(context, 32f)
+        get() = context.dpToPx(32f)
     override val viewHeight: Int
-        get() = dip2px(context, 16f)
+        get() = context.dpToPx(16f)
 
     override fun autoToAnimRefreshing(listener: Animation.AnimationListener?) {
         listener?.onAnimationEnd(null)
