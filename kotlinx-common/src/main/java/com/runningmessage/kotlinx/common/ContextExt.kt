@@ -23,8 +23,45 @@ fun <T : Context> T?.toastLong(@StringRes resId: Int) = this?.let { context ->
     Toast.makeText(this, resId, Toast.LENGTH_LONG).show()
 }
 
+//@formatter:off
+/***
+ *  e.g.
+```java
+context.startActivity<MyActivity>()
+
+// same with below
+
+context.startActivity(Intent(context, MyActivity::class.java))
+
+```
+ */
+//@formatter:on
 inline fun <reified A : Activity> Context?.startActivity() = this?.let { context ->
     startActivity(Intent(context, A::class.java))
+}
+
+//@formatter:off
+/***
+ *  e.g.
+```java
+context.startActivity<MyActivity>{
+    action = "com.action.xxx"
+    putExtra("key", "value")
+}
+
+// same with below
+
+val intent = Intent(context, MyActivity::class.java).apply{
+    action = "com.action.xxx"
+    putExtra("key", "value")
+}
+context.startActivity(intent)
+
+```
+ */
+//@formatter:on
+inline fun <reified A : Activity> Context?.startActivity(block: Intent.() -> Unit) = this?.let { context ->
+    startActivity(Intent(context, A::class.java).also { it.block() })
 }
 
 /***
