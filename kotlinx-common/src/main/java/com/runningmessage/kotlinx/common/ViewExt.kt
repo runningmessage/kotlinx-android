@@ -8,6 +8,42 @@ import android.view.ViewGroup
  */
 
 /***
+ *  same with : visibility = View.VISIBLE
+ */
+fun <V : View> V.setVisible() {
+    visibility = View.VISIBLE
+}
+
+/***
+ *  return : visibility == View.VISIBLE
+ */
+fun <V : View> V.isVisible() = visibility == View.VISIBLE
+
+/***
+ *  same with : visibility = View.INVISIBLE
+ */
+fun <V : View> V.setInvisible() {
+    visibility = View.INVISIBLE
+}
+
+/***
+ *  return : visibility == View.INVISIBLE
+ */
+fun <V : View> V.isInvisible() = visibility == View.INVISIBLE
+
+/***
+ *  same with : visibility = View.GONE
+ */
+fun <V : View> V.setGone() {
+    visibility = View.GONE
+}
+
+/***
+ *  return : visibility == View.GONE
+ */
+fun <V : View> V.isGone() = visibility == View.GONE
+
+/***
  *     1. return the leftMargin of the layoutParams for the current View, if exists , otherwise return null
  *     2. set the leftMargin of the layoutParams for the current View, and reset the layoutParams
  */
