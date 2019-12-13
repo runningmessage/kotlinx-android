@@ -48,7 +48,7 @@ ivy
     </dependency>
 ```
 ---  
-## widget
+## kotlinx-widget
 AbsSwipeRefreshLayout<ProgressView, RemindView>:
 
     rewite SwipeRefreshLayout :
@@ -60,7 +60,7 @@ LoadMoreRecyclerAdapter<VHData : RecyclerView.ViewHolder, Data, VHFooter>:
     custom RecyclerView.Adapter :
     1. support pull up load more: 支持上拉加载更多
     
-## common
+## kotlinx-common
 AndroidExt:
 
 ```java
@@ -99,10 +99,96 @@ BitmapExt:
     Bitmap?.createRoundedCornerBitmap
     1. create a new rounded corner bitmap, basing on the current bitmap: 基于当前 Bitmap 创建一个带圆角的 Bitmap 
     
+ContextExt:
+
+    Context?.toastShort(msg)    
+    Context?.toastShort(resId)   
+    Context?.toastLong(msg)    
+    Context?.toastLong(resId) 
+    
+    Context.dpToPx(dp)
+    1. cast the [dp] dip into px unit
+    
+    Context.pxToDp(px)
+    1. cast the [px] px into dip unit
+    
+    Context.screenWidth()
+    1. get the screen width pixels ,
+    same as [Context.getResources].[getDisplayMetrics].[widthPixels]
+ 
+    Context.screenWidthShort()
+    1. return the smaller between [screenWidth] and [screenHeight]
+    
+    Context.screenWidthX()
+    1. return the [screenWidthShort] if current is orientation portrait, otherwise the [screenHeightLong]
+    
+    Context.screenHeight()
+    1. get the screen height pixels ,
+    same as [Context.getResources].[getDisplayMetrics].[heightPixels]
+    
+    Context.screenHeightLong()
+    1. return the larger between [screenWidth] and [screenHeight]
+    
+    Context.screenHeightY()
+    1. return the [screenHeightLong] if current is orientation portrait, otherwise the [screenWidthShort]
+    
+```java
+  
+Context.startActivity<MyActivity>()
+
+// same with below
+
+Context.startActivity(Intent(context, MyActivity::class.java))
+
+``` 
+```java
+  
+Context.startActivity<MyActivity>{
+    action = "com.action.xxx"
+    putExtra("key", "value")
+}
+
+// same with below
+
+val intent = Intent(context, MyActivity::class.java).apply{
+    action = "com.action.xxx"
+    putExtra("key", "value")
+}
+Context.startActivity(intent)
+
+```
+HandlerExt:
+```java
+  
+Handler.postDelayed(delay){
+    // do something
+}
+
+```    
+    
+NoLeakListenerFunction1:
+
+    wrap the Listener implementing interface , which only has one callback method, **Avoid Memory Leak !!!** 
+    包装 只实现 有一个单独方法的接口 的监听器， 并返回代理对象， ***避免内存泄漏 !!!***
+    
 TextViewExt:
 
     TextView.addEllipsis:
     1. add "…" after the end of text: 在 TextView 显示的文本末尾添加省略号( … )
+    
+ThreadExt:
+
+    object UiThreadHandler
+    isMainThread()
+    
+    Runnable.runOnUiThread(target)
+    1. immediately run the task, if current is on UI thread
+    2. otherwise, to post the task into run queue, or maybe a ui thread handler
+    
+    Runnable.postOnUiThread(target, delay)
+    1. post the task into run queue, or maybe a ui thread handler;
+    and the task will be to run after [delay] milliseconds ,
+    even if the [delay] is less than 0, it is still waiting the run queue to call running
     
 ViewExt:
 
@@ -130,8 +216,10 @@ ViewExt:
     1. return the height of the layoutParams for the current View, if exists , otherwise return null
     2. set the height of the layoutParams for the current View, and reset the layoutParams
     
-    
-NoLeakListenerFunction1:
+```java
+  
+View.postDelayed(delay){
+    // do something
+}
 
-    wrap the Listener implementing interface , which only has one callback method, **Avoid Memory Leak !!!** 
-    包装 只实现 有一个单独方法的接口 的监听器， 并返回代理对象， ***避免内存泄漏 !!!***
+```    
