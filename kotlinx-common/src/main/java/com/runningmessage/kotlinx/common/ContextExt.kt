@@ -1,7 +1,31 @@
 package com.runningmessage.kotlinx.common
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.res.Configuration
+import android.support.annotation.StringRes
+import android.widget.Toast
+
+fun <T : Context> T?.toastShort(msg: CharSequence) = this?.let { context ->
+    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+}
+
+fun <T : Context> T?.toastShort(@StringRes resId: Int) = this?.let { context ->
+    Toast.makeText(this, resId, Toast.LENGTH_SHORT).show()
+}
+
+fun <T : Context> T?.toastLong(msg: CharSequence) = this?.let { context ->
+    Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+}
+
+fun <T : Context> T?.toastLong(@StringRes resId: Int) = this?.let { context ->
+    Toast.makeText(this, resId, Toast.LENGTH_LONG).show()
+}
+
+inline fun <reified A : Activity> Context?.startActivity() = this?.let { context ->
+    startActivity(Intent(context, A::class.java))
+}
 
 /***
  *  cast the [dp] dip into px unit
