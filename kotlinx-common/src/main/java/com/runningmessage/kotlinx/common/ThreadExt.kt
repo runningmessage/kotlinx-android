@@ -12,6 +12,9 @@ object UiThreadHandler : Handler(Looper.getMainLooper())
 
 fun isMainThread() = Looper.getMainLooper().thread.id == Thread.currentThread().id
 
+/***
+ *  create a new [Thread] and start to run the [block]
+ */
 inline fun <R> runOnNewThread(crossinline block: () -> R) {
     Thread { block() }.start()
 }
@@ -22,18 +25,31 @@ fun nextThreadNum(): Int {
     return threadInitNumber++
 }
 
+/***
+ *  create a new [HandlerThread] named "HandlerThread-[nextThreadNum]",
+ *  and send message to the [Handler] associated with this [HandlerThread].[getLooper()][HandlerThread.getLooper] to run the [block] after [delay] milliseconds
+ */
 inline fun <R> postOnNewThread(delay: Long = 0, crossinline block: () -> R) {
     Handler(HandlerThread("HandlerThread-${nextThreadNum()}").looper).postDelayed(delay) { block() }
 }
 
+/***
+ *  send message to the [Handler] associated with [currentThread][Thread.currentThread].[looper][Looper.myLooper] to run the [block] after [delay] milliseconds
+ */
 inline fun <R> postOnCurrentThread(delay: Long = 0, crossinline block: () -> R) {
     Handler().postDelayed(delay) { block() }
 }
 
+/***
+ *  see : [Runnable.runOnUiThread]
+ */
 inline fun <R> runOnUiThread(target: Any? = null, crossinline block: () -> R) {
     Runnable { block() }.runOnUiThread(target)
 }
 
+/***
+ *  see : [Runnable.postOnUiThread]
+ */
 inline fun <R> postOnUiThread(target: Any? = null, delay: Long = 0, crossinline block: () -> R) {
     Runnable { block() }.postOnUiThread(target, delay)
 }

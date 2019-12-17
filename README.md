@@ -181,6 +181,60 @@ ThreadExt:
     object UiThreadHandler
     isMainThread()
     
+```java
+  
+runOnNewThread { 
+    // do something in a new thread
+}
+
+// same with below
+
+Thread{
+    // do something in a new thread
+}.start()
+
+``` 
+```java
+  
+postOnNewThread(1000) { 
+    // do something in a new thread after 1000 milliseconds
+}
+
+// same with below
+
+val handler = Handler(HandlerThread("HandlerThread-${nextThreadNum()}").looper)
+handler.postDelayed(1000) {
+    // do something in a new thread after 1000 milliseconds
+}
+
+``` 
+```java
+  
+postOnCurrentThread(1000) { 
+    // do something in current thread after 1000 milliseconds
+}
+
+// same with below
+
+Handler().postDelayed(1000) {
+    // do something in current thread after 1000 milliseconds
+}
+
+``` 
+```java
+  
+runOnUiThread(target) { 
+    // do something in ui thread, 
+    // and try to associate with the lifecycle for target , when target is not null
+}
+
+postOnUiThread(target, 1000){
+    // do something in ui thread after 1000 milliseconds, 
+    // and try to associate with the lifecycle for target , when target is not null
+}
+
+``` 
+    
     Runnable.runOnUiThread(target)
     1. immediately run the task, if current is on UI thread
     2. otherwise, to post the task into run queue, or maybe a ui thread handler
