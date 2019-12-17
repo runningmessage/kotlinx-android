@@ -11,6 +11,22 @@ object UiThreadHandler : Handler(Looper.getMainLooper())
 
 fun isMainThread() = Looper.getMainLooper().thread.id == Thread.currentThread().id
 
+inline fun <R> runOnNewThread(crossinline block: () -> R) {
+    Thread { block() }.start()
+}
+
+inline fun <R> postOnNewThread(delay: Long = 0, crossinline block: () -> R) {
+    Handler().postDelayed(delay) { block() }
+}
+
+inline fun <R> runOnUiThread(target: Any? = null, crossinline block: () -> R) {
+    Runnable { block() }.runOnUiThread(target)
+}
+
+inline fun <R> postOnUiThread(target: Any? = null, delay: Long = 0, crossinline block: () -> R) {
+    Runnable { block() }.postOnUiThread(target, delay)
+}
+
 /***
  * make the task [Runnable] , to run on UI thread
  *
@@ -63,7 +79,7 @@ fun <T : Runnable> T?.postOnUiThread(target: Any? = null, delay: Long = 0) = thi
         FragmentClassSupport?.isInstance(target) == true -> {
             UiThreadHandler.postDelayed(delay) {
                 try {
-                    val targetGet = targetRef.get();
+                    val targetGet = targetRef.get()
                     FragmentClassSupport?.cast(targetGet)?.let { fragment ->
                         if (FragmentIsRemovingSupport?.invoke(fragment) != false) {
                             task.run()
