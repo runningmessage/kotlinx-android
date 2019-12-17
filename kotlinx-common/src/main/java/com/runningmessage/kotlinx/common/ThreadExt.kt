@@ -3,6 +3,7 @@ package com.runningmessage.kotlinx.common
 import android.app.Activity
 import android.app.Fragment
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.Looper
 import android.view.View
 import java.lang.ref.WeakReference
@@ -15,7 +16,17 @@ inline fun <R> runOnNewThread(crossinline block: () -> R) {
     Thread { block() }.start()
 }
 
+private var threadInitNumber: Int = 0
+@Synchronized
+fun nextThreadNum(): Int {
+    return threadInitNumber++
+}
+
 inline fun <R> postOnNewThread(delay: Long = 0, crossinline block: () -> R) {
+    Handler(HandlerThread("HandlerThread-${nextThreadNum()}").looper).postDelayed(delay) { block() }
+}
+
+inline fun <R> postOnCurrentThread(delay: Long = 0, crossinline block: () -> R) {
     Handler().postDelayed(delay) { block() }
 }
 
