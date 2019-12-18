@@ -99,6 +99,18 @@ AndroidExt:
     /** Do something depending on android sdk, for <b>compatibility</b> */
     /** 判断安卓SDK版本后 执行代码,  <b>兼容性</b> */
     
+    ifSdk(16, 19, 29) {
+        //do something if Build.VERSION.SDK_INT is one of 16, 19, 29
+    } other {
+        //otherwise, do other thing
+    }
+        
+    ifNotSdk(16, 19, 29) {
+        //do something if Build.VERSION.SDK_INT is not 16, 19 or 29
+    } other {
+        //otherwise, do other thing
+    }
+    
     fromSdk(16) {
         //do something if Build.VERSION.SDK_INT >= 16
     } other {
