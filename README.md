@@ -202,9 +202,22 @@ postOnNewThread(1000) {
 
 // same with below
 
-val handler = Handler(HandlerThread("HandlerThread-${nextThreadNum()}").looper)
+val handler = Handler(HandlerThread("HandlerThread-${nextThreadNum()}").apply { start() }.looper)
 handler.postDelayed(1000) {
-    // do something in a new thread after 1000 milliseconds
+    try {
+        // do something in a new thread after 1000 milliseconds
+    } catch (ignored: Exception) {
+    } finally {
+        (Thread.currentThread() as? HandlerThread)?.let { thread ->
+
+            fromSdk(18) {
+                thread.quitSafely()
+            } other {
+                thread.quit()
+            }
+
+        }
+    }
 }
 
 ``` 

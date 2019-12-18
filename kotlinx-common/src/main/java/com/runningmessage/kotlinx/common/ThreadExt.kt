@@ -27,10 +27,26 @@ fun nextThreadNum(): Int {
 
 /***
  *  create a new [HandlerThread] named "HandlerThread-[nextThreadNum]",
- *  and send message to the [Handler] associated with this [HandlerThread].[getLooper()][HandlerThread.getLooper] to run the [block] after [delay] milliseconds
+ *  and send message to the [Handler] associated with this [HandlerThread].[getLooper()][HandlerThread.getLooper] to run the [block] after [delay] milliseconds,
+ *  and then to call [HandlerThread.quitSafely] or [HandlerThread.quit] after [block] invoke
  */
 inline fun <R> postOnNewThread(delay: Long = 0, crossinline block: () -> R) {
-    Handler(HandlerThread("HandlerThread-${nextThreadNum()}").looper).postDelayed(delay) { block() }
+    Handler(HandlerThread("HandlerThread-${nextThreadNum()}").apply { start() }.looper).postDelayed(delay) {
+        try {
+            block()
+        } catch (ignored: Exception) {
+        } finally {
+            (Thread.currentThread() as? HandlerThread)?.let { thread ->
+
+                fromSdk(18) {
+                    thread.quitSafely()
+                } other {
+                    thread.quit()
+                }
+
+            }
+        }
+    }
 }
 
 /***
