@@ -61,6 +61,37 @@ LoadMoreRecyclerAdapter<VHData : RecyclerView.ViewHolder, Data, VHFooter>:
     1. support pull up load more: 支持上拉加载更多
     
 ## kotlinx-common
+
+ActivityExt:
+
+    Activity.contentView
+    1. return the content view set by [Activity.setContentView]
+
+```java
+  
+Activity.startActivityForResult<MyActivity>(requestCode, bundle)
+
+// same with below
+
+Activity.startActivityForResult(Intent(context, MyActivity::class.java), requestCode, bundle)
+
+``` 
+```java
+  
+Activity.startActivityForResult<MyActivity>(requestCode, bundle){
+    action = "com.action.xxx"
+    putExtra("key", "value")
+}
+
+// same with below
+
+val intent = Intent(context, MyActivity::class.java).apply{
+    action = "com.action.xxx"
+    putExtra("key", "value")
+}
+Activity.startActivityForResult(intent, requestCode, bundle)
+
+```
 AndroidExt:
 
 ```java
@@ -290,3 +321,14 @@ View.postDelayed(delay){
 }
 
 ```    
+
+ViewGroupExt:
+
+    ViewGroup.views
+    1. the list of child view
+    
+    ViewGroup.firstView
+    1. the first child view
+    
+    ViewGroup.lastView
+    1. the last child view
