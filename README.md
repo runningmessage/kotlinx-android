@@ -92,6 +92,20 @@ val intent = Intent(context, MyActivity::class.java).apply{
 Activity.startActivityForResult(intent, requestCode, bundle)
 
 ```
+```java
+
+Activity.startActivityForResult("com.action.xxx", requestCode, bundle){
+    putExtra("key", "value")
+}
+
+// same with below
+
+val intent = Intent("com.action.xxx").apply{
+    putExtra("key", "value")
+}
+Activity.startActivityForResult(intent, requestCode, bundle)
+
+```
 AndroidExt:
 
 ```java
@@ -136,7 +150,15 @@ AndroidExt:
     }
 
 ```
+AnyExt.kt
 
+```java
+    
+    Any.ifNull{
+        // do something and return the default vale when null
+    }
+    
+```    
 BitmapExt:
 
     Bitmap?.createRoundedCornerBitmap
@@ -200,6 +222,20 @@ val intent = Intent(context, MyActivity::class.java).apply{
 Context.startActivity(intent)
 
 ```
+```java
+context.startActivity("com.action.xxx"){
+    putExtra("key", "value")
+}
+
+// same with below
+
+val intent = Intent("com.action.xxx").apply{
+    putExtra("key", "value")
+}
+context.startActivity(intent)
+
+```
+
 HandlerExt:
 ```java
   
@@ -214,6 +250,19 @@ NoLeakListenerFunction1:
     wrap the Listener implementing interface , which only has one callback method, **Avoid Memory Leak !!!** 
     包装 只实现 有一个单独方法的接口 的监听器， 并返回代理对象， ***避免内存泄漏 !!!***
     
+StringExt.kt
+
+    CharSequence.ifNullOrEmpty{}    
+    CharSequence.ifNullOrBlank{}    
+    CharSequence.ifNotNullOrEmpty{}    
+    CharSequence.ifNotNullOrBlank{}
+        
+SupportExt.kt
+      
+    FragmentClassSupport
+    FragmentGetActivitySupport
+    FragmentIsRemovingSupport
+          
 TextViewExt:
 
     TextView.addEllipsis:
