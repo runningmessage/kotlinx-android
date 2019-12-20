@@ -12,15 +12,15 @@ fun <T : Context> T?.toastShort(msg: CharSequence) = this?.let { context ->
 }
 
 fun <T : Context> T?.toastShort(@StringRes resId: Int) = this?.let { context ->
-    Toast.makeText(this, resId, Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, resId, Toast.LENGTH_SHORT).show()
 }
 
 fun <T : Context> T?.toastLong(msg: CharSequence) = this?.let { context ->
-    Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+    Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
 }
 
 fun <T : Context> T?.toastLong(@StringRes resId: Int) = this?.let { context ->
-    Toast.makeText(this, resId, Toast.LENGTH_LONG).show()
+    Toast.makeText(context, resId, Toast.LENGTH_LONG).show()
 }
 
 //@formatter:off
