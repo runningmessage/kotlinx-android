@@ -222,10 +222,16 @@ TextViewExt:
 ThreadExt:
 
     object UiThreadHandler
-    isMainThread()
+    1. The UI thread handler
     
+    isMainThread()
+    1. return whether the current thread is main thread
+    
+
 ```java
-  
+/***
+ *  create a new [Thread] and start to run the [block]
+ */  
 runOnNewThread { 
     // do something in a new thread
 }
@@ -237,8 +243,13 @@ Thread{
 }.start()
 
 ``` 
+
 ```java
-  
+/***
+ *  create a new [HandlerThread] named "HandlerThread-[nextThreadNum]",
+ *  and send message to the [Handler] associated with this [HandlerThread].[getLooper()][HandlerThread.getLooper] to run the [block] after [delay] milliseconds,
+ *  and then to call [HandlerThread.quitSafely] or [HandlerThread.quit] after [block] invoke
+ */  
 postOnNewThread(1000) { 
     // do something in a new thread after 1000 milliseconds
 }
@@ -249,7 +260,6 @@ val handler = Handler(HandlerThread("HandlerThread-${nextThreadNum()}").apply { 
 handler.postDelayed(1000) {
     try {
         // do something in a new thread after 1000 milliseconds
-    } catch (ignored: Exception) {
     } finally {
         (Thread.currentThread() as? HandlerThread)?.let { thread ->
 
@@ -265,7 +275,11 @@ handler.postDelayed(1000) {
 
 ``` 
 ```java
-  
+/***
+ *  if no [Looper] has associated with [currentThread][Thread.currentThread], just to [prepare][Looper.prepare] and call [Looper.loop],
+ *  in this case, it will call [HandlerThread.quitSafely] or [HandlerThread.quit] after [block] invoke;
+ *  and then send message to the [Handler] associated with [currentThread][Thread.currentThread].[looper][Looper.myLooper] to run the [block] after [delay] milliseconds
+ */ 
 postOnCurrentThread(1000) { 
     // do something in current thread after 1000 milliseconds
 }
@@ -274,6 +288,37 @@ postOnCurrentThread(1000) {
 
 Handler().postDelayed(1000) {
     // do something in current thread after 1000 milliseconds
+}
+if (isMainThread()) {
+    postOnUiThread(1000){
+        // do something in current thread after 1000 milliseconds
+    }
+} else {
+    var needQuitLooper = false
+    val looper: Looper? = Looper.myLooper().ifNull {
+        needQuitLooper = true
+        Looper.prepare()
+        Looper.myLooper()
+    }
+
+    postOnUiThread {
+        Handler(looper).postDelayed(1000) {
+            try {
+                // do something in current thread after 1000 milliseconds
+            } finally {
+                if (needQuitLooper) {
+                    fromSdk(18) {
+                        looper?.quitSafely()
+                    } other {
+                        looper?.quit()
+                    }
+                }
+            }
+        }
+    }
+
+    Looper.loop()
+
 }
 
 ``` 

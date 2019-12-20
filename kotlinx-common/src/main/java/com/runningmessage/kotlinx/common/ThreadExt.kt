@@ -8,8 +8,14 @@ import android.os.Looper
 import android.view.View
 import java.lang.ref.WeakReference
 
+/***
+ *  The UI thread handler
+ */
 object UiThreadHandler : Handler(Looper.getMainLooper())
 
+/**
+ *  return whether the current thread is main thread
+ */
 fun isMainThread() = Looper.getMainLooper().thread.id == Thread.currentThread().id
 
 /***
@@ -30,11 +36,10 @@ fun nextThreadNum(): Int {
  *  and send message to the [Handler] associated with this [HandlerThread].[getLooper()][HandlerThread.getLooper] to run the [block] after [delay] milliseconds,
  *  and then to call [HandlerThread.quitSafely] or [HandlerThread.quit] after [block] invoke
  */
-inline fun <R> postOnNewThread(delay: Long = 0, crossinline block: () -> R) {
+fun <R> postOnNewThread(delay: Long = 0, block: () -> R) {
     Handler(HandlerThread("HandlerThread-${nextThreadNum()}").apply { start() }.looper).postDelayed(delay) {
         try {
             block()
-        } catch (ignored: Exception) {
         } finally {
             (Thread.currentThread() as? HandlerThread)?.let { thread ->
 
@@ -50,10 +55,42 @@ inline fun <R> postOnNewThread(delay: Long = 0, crossinline block: () -> R) {
 }
 
 /***
- *  send message to the [Handler] associated with [currentThread][Thread.currentThread].[looper][Looper.myLooper] to run the [block] after [delay] milliseconds
+ *  if no [Looper] has associated with [currentThread][Thread.currentThread], just to [prepare][Looper.prepare] and call [Looper.loop],
+ *  in this case, it will call [HandlerThread.quitSafely] or [HandlerThread.quit] after [block] invoke;
+ *  and then send message to the [Handler] associated with [currentThread][Thread.currentThread].[looper][Looper.myLooper] to run the [block] after [delay] milliseconds
  */
-inline fun <R> postOnCurrentThread(delay: Long = 0, crossinline block: () -> R) {
-    Handler().postDelayed(delay) { block() }
+fun <R> postOnCurrentThread(delay: Long = 0, block: () -> R) {
+
+    if (isMainThread()) {
+        postOnUiThread(delay = delay, block = block)
+    } else {
+        var needQuitLooper = false
+        val looper: Looper? = Looper.myLooper().ifNull {
+            needQuitLooper = true
+            Looper.prepare()
+            Looper.myLooper()
+        }
+
+        postOnUiThread {
+            Handler(looper).postDelayed(delay) {
+                try {
+                    block()
+                } finally {
+                    if (needQuitLooper) {
+                        fromSdk(18) {
+                            looper?.quitSafely()
+                        } other {
+                            looper?.quit()
+                        }
+                    }
+                }
+            }
+        }
+
+        Looper.loop()
+
+    }
+
 }
 
 /***
