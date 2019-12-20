@@ -286,9 +286,6 @@ postOnCurrentThread(1000) {
 
 // same with below
 
-Handler().postDelayed(1000) {
-    // do something in current thread after 1000 milliseconds
-}
 if (isMainThread()) {
     postOnUiThread(1000){
         // do something in current thread after 1000 milliseconds
