@@ -64,6 +64,33 @@ inline fun <reified A : Activity> Context?.startActivity(block: Intent.() -> Uni
     startActivity(Intent(context, A::class.java).also { it.block() })
 }
 
+//@formatter:off
+/***
+ *  e.g.
+```java
+context.startActivity("com.action.xxx"){
+    putExtra("key", "value")
+}
+
+// same with below
+
+val intent = Intent("com.action.xxx").apply{
+    putExtra("key", "value")
+}
+context.startActivity(intent)
+
+```
+ */
+//@formatter:on
+fun Context?.startActivity(action: String = "", block: (Intent.() -> Unit)? = null) = this?.let { context ->
+    startActivity(Intent().also { intent ->
+        action.ifNotNullOrBlank { action ->
+            intent.action = action
+        }
+        block?.let { intent.it() }
+    })
+}
+
 /***
  *  cast the [dp] dip into px unit
  */

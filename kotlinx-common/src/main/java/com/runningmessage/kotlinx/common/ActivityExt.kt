@@ -51,6 +51,35 @@ inline fun <reified A : Activity> Activity.startActivityForResult(requestCode: I
     startActivityForResult(Intent(this, A::class.java).also { it.block() }, requestCode, options)
 }
 
+
+//@formatter:off
+/***
+ * e.g.
+```java
+
+Activity.startActivityForResult("com.action.xxx", requestCode, bundle){
+    putExtra("key", "value")
+}
+
+// same with below
+
+val intent = Intent("com.action.xxx").apply{
+    putExtra("key", "value")
+}
+Activity.startActivityForResult(intent, requestCode, bundle)
+
+```
+ */
+//@formatter:on
+fun Activity.startActivityForResult(action: String = "", requestCode: Int, options: Bundle? = null, block: (Intent.() -> Unit)? = null) {
+    startActivityForResult(Intent().also { intent ->
+        action.ifNotNullOrBlank { action ->
+            intent.action = action
+        }
+        block?.let { intent.it() }
+    }, requestCode, options)
+}
+
 /***
  *  return the content view set by [Activity.setContentView]
  */
