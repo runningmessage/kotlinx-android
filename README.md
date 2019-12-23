@@ -393,6 +393,18 @@ postOnUiThread(target, 1000){
     
 ViewExt:
 
+    
+```java
+  
+View.setVisible() // visibility = View.VISIBLE
+View.isVisible() // return visibility == View.VISIBLE
+View.setInvisible() // visibility = View.INVISIBLE
+View.isInvisible() // return visibility == View.INVISIBLE
+View.setGone() // visibility = View.GONE
+View.isGone() // return visibility = View.GONE
+
+```   
+
     View.layoutLeftMargin: 
     1. return the leftMargin of the layoutParams for the current View, if exists , otherwise return null
     2. set the leftMargin of the layoutParams for the current View, and reset the layoutParams
