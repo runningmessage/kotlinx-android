@@ -1,13 +1,11 @@
 apply plugin: 'com.android.library'
-
 apply plugin: 'kotlin-android'
-
 apply plugin: 'kotlin-android-extensions'
-
 apply plugin: 'bintray-release'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion rootProject.ext.compileSdkVersion
+
     defaultConfig {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
@@ -15,27 +13,29 @@ android {
         versionName rootProject.ext.versionName
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    buildToolsVersion '28.0.2'
+
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation "com.android.support:support-annotations:$supportAnnotationsVersion"
+    implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+
+    implementation project(':kotlinx-common')
 }
 
-// ./gradlew clean build bintrayUpload -PbintrayUser=xx -PbintrayKey=xx -PdryRun=false
 
 publish {
     userOrg = 'runningmessage'
     groupId = 'com.runningmessage.kotlinx-android'
-    artifactId = 'kotlinx-common'
+    artifactId = 'kotlinx-reflect'
     publishVersion = rootProject.ext.versionName
     desc = 'Use Kotlin Easily'
     website = 'https://github.com/runningmessage/kotlinx-android'

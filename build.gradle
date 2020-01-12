@@ -5,6 +5,44 @@ buildscript {
     ext.versionCode = 6
     ext.versionName = "0.0.6"
     repositories {
+
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/groups/public/'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/jcenter'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/apache-snapshots'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/central'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/google'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/gradle-plugin'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/public'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/spring'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/releases'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/snapshots'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/grails-core'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/mapr-public'
+        }
+
         google()
         jcenter()
     }
@@ -20,13 +58,13 @@ buildscript {
 }
 
 ext {
-    compileSdkVersion = 26
-    buildToolsVersion = '26.0.2'
+    compileSdkVersion = 29
+    buildToolsVersion = '29.0.2'
 
     targetSdkVersion = 23
     minSdkVersion = 16
 
-    androidSupportVersion = '26.0.0'
+    androidSupportVersion = '27.0.2'
     supportAnnotationsVersion = '27.0.2'
 
     sourceCompatibility = JavaVersion.VERSION_1_7
@@ -35,6 +73,44 @@ ext {
 
 allprojects {
     repositories {
+
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/groups/public/'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/jcenter'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/apache-snapshots'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/central'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/google'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/gradle-plugin'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/public'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/spring'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/releases'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/snapshots'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/grails-core'
+        }
+        maven {
+            url 'https://maven.aliyun.com/nexus/content/repositories/mapr-public'
+        }
+
         google()
         jcenter()
     }

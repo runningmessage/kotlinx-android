@@ -5,8 +5,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
-
+    compileSdkVersion 29
     defaultConfig {
         applicationId "com.runningmessage.kotlinx.demo"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -21,17 +20,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    buildToolsVersion '28.0.2'
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':kotlinx-widget')
     implementation project(':kotlinx-common')
-
-
+    implementation project(':kotlinx-reflect')
     implementation "com.android.support:recyclerview-v7:$androidSupportVersion"
-
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "com.android.support:appcompat-v7:$androidSupportVersion"
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'

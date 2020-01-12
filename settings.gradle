@@ -1,1 +1,1 @@
-include ':app', ':kotlinx-common', ':kotlinx-widget'
+include ':app', ':kotlinx-common', ':kotlinx-widget', ':kotlinx-reflect'
