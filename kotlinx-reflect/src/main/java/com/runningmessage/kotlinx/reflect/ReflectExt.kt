@@ -42,24 +42,24 @@ operator fun <T> KClass<*>.invoke(vararg args: Any?): T? {
 }
 
 @Throws(ReflectException::class)
-fun String.createInners(handler: (CallInnerHandler.() -> Unit)? = null) = createInner<Any>(handler)
+fun String.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) = createInner(handler)
 
 @Throws(ReflectException::class)
-fun <T> String.createInner(handler: (CallInnerHandler.() -> Unit)? = null): T? = parseKClassByClassName(this).createInner(handler)
+fun <T> String.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T? = parseKClassByClassName(this).createInner(handler)
 
 @Throws(ReflectException::class)
-fun Class<*>.createInners(handler: (CallInnerHandler.() -> Unit)? = null) = createInner<Any>(handler)
+fun Class<*>.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) = createInner(handler)
 
 @Throws(ReflectException::class)
-fun <T> Class<*>.createInner(handler: (CallInnerHandler.() -> Unit)? = null): T? = null
+fun <T> Class<*>.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T? = null
 
 @Throws(ReflectException::class)
-fun KClass<*>.createInners(handler: (CallInnerHandler.() -> Unit)? = null) = createInner<Any>(handler)
+fun KClass<*>.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) = createInner(handler)
 
 @Throws(ReflectException::class)
-fun <T> KClass<*>.createInner(handler: (CallInnerHandler.() -> Unit)? = null): T? {
+fun <T> KClass<*>.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T? {
 
-    val callInnerHandler = CallInnerHandler().apply {
+    val callInnerHandler = CallInnerHandler<T>().apply {
         if (handler != null) handler()
     }
     try {
@@ -234,25 +234,89 @@ private fun parseKotlinTypes(vararg values: Any?): Array<KClass<*>> {
     return result
 }
 
-typealias InnerHandler = (args: Array<out Any?>?) -> Any?
+class CallInnerHandler<P> {
 
-class CallInnerHandler {
-
-    private val handlerMap = mutableMapOf<String, InnerHandler>()
-
-    fun override(methodName: String, handler: InnerHandler) {
-        handlerMap[methodName] = handler
-    }
+    private val handlerMap = mutableMapOf<String, ICallHandlerFunction<P>>()
 
     fun invoke(proxy: Any?, method: Method?, args: Array<out Any?>?): Any? {
         method?.let { methodNo ->
-
             handlerMap[methodNo.name]?.let { handler ->
-                return handler(args)
+                return handler.call(proxy, args)
             }
         }
 
-        return Unit
+        return null
+    }
+
+
+    fun override(methodName: String, handler: CallHandlerFunction<P>) {
+        handlerMap[methodName] = handler
+    }
+
+    fun override(methodName: String, handler: P?.() -> Any?) {
+        handlerMap[methodName] = CallHandlerFunction0 {
+            return@CallHandlerFunction0 this.handler()
+        }
+    }
+
+    fun <P1> override(methodName: String, handler: P?.(param1: P1?) -> Any?) {
+        handlerMap[methodName] = CallHandlerFunction1<P, P1> { param1 ->
+            return@CallHandlerFunction1 this.handler(param1)
+        }
+    }
+
+    fun <P1, P2> override(methodName: String, handler: P?.(param1: P1?, param2: P2?) -> Any?) {
+        handlerMap[methodName] = CallHandlerFunction2<P, P1, P2> { param1, param2 ->
+            return@CallHandlerFunction2 this.handler(param1, param2)
+        }
+    }
+
+    fun <P1, P2, P3> override(methodName: String, handler: P?.(param1: P1?, param2: P2?, param3: P3?) -> Any?) {
+        handlerMap[methodName] = CallHandlerFunction3<P, P1, P2, P3> { param1, param2, param3 ->
+            return@CallHandlerFunction3 this.handler(param1, param2, param3)
+        }
+    }
+
+    fun <P1, P2, P3, P4> override(methodName: String, handler: P?.(param1: P1?, param2: P2?, param3: P3?, param4: P4?) -> Any?) {
+        handlerMap[methodName] = CallHandlerFunction4<P, P1, P2, P3, P4> { param1, param2, param3, param4 ->
+            return@CallHandlerFunction4 this.handler(param1, param2, param3, param4)
+        }
+    }
+
+    fun <P1, P2, P3, P4, P5> override(methodName: String, handler: P?.(param1: P1?, param2: P2?, param3: P3?, param4: P4?, param5: P5?) -> Any?) {
+        handlerMap[methodName] = CallHandlerFunction5<P, P1, P2, P3, P4, P5> { param1, param2, param3, param4, param5 ->
+            return@CallHandlerFunction5 this.handler(param1, param2, param3, param4, param5)
+        }
+    }
+
+    fun <P1, P2, P3, P4, P5, P6> override(methodName: String, handler: P?.(param1: P1?, param2: P2?, param3: P3?, param4: P4?, param5: P5?, param6: P6?) -> Any?) {
+        handlerMap[methodName] = CallHandlerFunction6<P, P1, P2, P3, P4, P5, P6> { param1, param2, param3, param4, param5, param6 ->
+            return@CallHandlerFunction6 this.handler(param1, param2, param3, param4, param5, param6)
+        }
+    }
+
+    fun <P1, P2, P3, P4, P5, P6, P7> override(methodName: String, handler: P?.(param1: P1?, param2: P2?, param3: P3?, param4: P4?, param5: P5?, param6: P6?, param7: P7?) -> Any?) {
+        handlerMap[methodName] = CallHandlerFunction7<P, P1, P2, P3, P4, P5, P6, P7> { param1, param2, param3, param4, param5, param6, param7 ->
+            return@CallHandlerFunction7 this.handler(param1, param2, param3, param4, param5, param6, param7)
+        }
+    }
+
+    fun <P1, P2, P3, P4, P5, P6, P7, P8> override(methodName: String, handler: P?.(param1: P1?, param2: P2?, param3: P3?, param4: P4?, param5: P5?, param6: P6?, param7: P7?, param8: P8?) -> Any?) {
+        handlerMap[methodName] = CallHandlerFunction8<P, P1, P2, P3, P4, P5, P6, P7, P8> { param1, param2, param3, param4, param5, param6, param7, param8 ->
+            return@CallHandlerFunction8 this.handler(param1, param2, param3, param4, param5, param6, param7, param8)
+        }
+    }
+
+    fun <P1, P2, P3, P4, P5, P6, P7, P8, P9> override(methodName: String, handler: P?.(param1: P1?, param2: P2?, param3: P3?, param4: P4?, param5: P5?, param6: P6?, param7: P7?, param8: P8?, param9: P9?) -> Any?) {
+        handlerMap[methodName] = CallHandlerFunction9<P, P1, P2, P3, P4, P5, P6, P7, P8, P9> { param1, param2, param3, param4, param5, param6, param7, param8, param9 ->
+            return@CallHandlerFunction9 this.handler(param1, param2, param3, param4, param5, param6, param7, param8, param9)
+        }
+    }
+
+    fun <P1, P2, P3, P4, P5, P6, P7, P8, P9, P10> override(methodName: String, handler: P?.(param1: P1?, param2: P2?, param3: P3?, param4: P4?, param5: P5?, param6: P6?, param7: P7?, param8: P8?, param9: P9?, param10: P10?) -> Any?) {
+        handlerMap[methodName] = CallHandlerFunction10<P, P1, P2, P3, P4, P5, P6, P7, P8, P9, P10> { param1, param2, param3, param4, param5, param6, param7, param8, param9, param10 ->
+            return@CallHandlerFunction10 this.handler(param1, param2, param3, param4, param5, param6, param7, param8, param9, param10)
+        }
     }
 }
 

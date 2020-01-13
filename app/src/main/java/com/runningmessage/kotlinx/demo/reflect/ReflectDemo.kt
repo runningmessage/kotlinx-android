@@ -122,11 +122,12 @@ class ReflectDemo {
 
             npRefreshLayout.calls("setOnRefreshListener")(OnRefreshListener.createInners {
 
-                override("onRefresh") {
-                    val autoNotify: Boolean = it?.get(0) as? Boolean ?: false
+                override<Boolean>("onRefresh") { autoNotify ->
+
+                    val autoNotifyNo = autoNotify ?: false
 
                     adapter.propertys("isLoadMoreEnable").value = false
-                    val message = if (autoNotify) "Auto Refresh Message" else "Swipe Refresh Message"
+                    val message = if (autoNotifyNo) "Auto Refresh Message" else "Swipe Refresh Message"
                     Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
 
                     npRefreshLayout?.postDelayed({

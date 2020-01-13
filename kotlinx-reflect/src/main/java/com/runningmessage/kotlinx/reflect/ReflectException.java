@@ -15,11 +15,6 @@ package com.runningmessage.kotlinx.reflect;
 
 public class ReflectException extends RuntimeException {
 
-    /**
-     * Generated UID
-     */
-    private static final long serialVersionUID = -6213149635297151442L;
-
     public ReflectException(String message) {
         super(message);
     }
