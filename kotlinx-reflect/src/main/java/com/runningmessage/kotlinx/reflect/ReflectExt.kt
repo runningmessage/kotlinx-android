@@ -12,6 +12,8 @@
  * limitations under the License.
  */
 
+@file:Suppress("unused")
+
 package com.runningmessage.kotlinx.reflect
 
 import com.runningmessage.kotlinx.common.ifNotNullOrBlank
@@ -51,6 +53,8 @@ import kotlin.reflect.full.isSubclassOf
  * Created by Lorss on 20-1-7.
  */
 val README = Unit
+private val Demo = README
+private val Code = README
 
 /**
  *  Call a matched constructor of the [KClass], which class name is same as the receiver [String] name;
