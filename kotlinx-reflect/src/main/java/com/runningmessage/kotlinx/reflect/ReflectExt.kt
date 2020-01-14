@@ -23,7 +23,7 @@ import kotlin.reflect.full.isSubclassOf
 /**
  * Some functions to make reflective calls.
  *
- * Any example comes at below:
+ * An example comes at below:
  *
  * [Demo]. [Code].
  *
@@ -104,7 +104,6 @@ operator fun <T> Class<*>.invoke(vararg args: Any?): T? = this.kotlin.invoke(*ar
  *
  *  @param args the parameters when call constructor
  */
-
 @Throws(ReflectException::class)
 operator fun <T> KClass<*>.invoke(vararg args: Any?): T? {
 
@@ -116,10 +115,9 @@ operator fun <T> KClass<*>.invoke(vararg args: Any?): T? {
             ?: throw ReflectException("Can not find the matched constructor in [this](value = $this)")
 }
 
-
 /**
  *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [KClass], which class name is same as the receiver [String] name;
- *  the try of the return value is [Any]?.
+ *  the type of the return value is [Any]?.
  *
  *  [Demo]. [Code].
  *
@@ -135,7 +133,8 @@ operator fun <T> KClass<*>.invoke(vararg args: Any?): T? {
  *      }
  *
  *   ```
- *  @param args the parameters when call constructor
+ *  @param handler the lambda parameter when create anonymous inner class instance,
+ *  in which can call [CallInnerHandler.override] to implement methods of interface
  */
 @Throws(ReflectException::class)
 fun String.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) = createInner(handler)
@@ -158,14 +157,15 @@ fun String.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) = c
  *      }
  *
  *   ```
- *  @param args the parameters when call constructor
+ *  @param handler the lambda parameter when create anonymous inner class instance,
+ *  in which can call [CallInnerHandler.override] to implement methods of interface
  */
 @Throws(ReflectException::class)
 fun <T> String.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T? = parseKClassByClassName(this).createInner(handler)
 
 /**
  *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [Class];
- *  the try of the return value is [Any]?.
+ *  the type of the return value is [Any]?.
  *
  *  [Demo]. [Code].
  *
@@ -181,7 +181,8 @@ fun <T> String.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T
  *      }
  *
  *   ```
- *  @param args the parameters when call constructor
+ *  @param handler the lambda parameter when create anonymous inner class instance,
+ *  in which can call [CallInnerHandler.override] to implement methods of interface
  */
 @Throws(ReflectException::class)
 fun Class<*>.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) = createInner(handler)
@@ -204,14 +205,15 @@ fun Class<*>.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) =
  *      }
  *
  *   ```
- *  @param args the parameters when call constructor
+ *  @param handler the lambda parameter when create anonymous inner class instance,
+ *  in which can call [CallInnerHandler.override] to implement methods of interface
  */
 @Throws(ReflectException::class)
 fun <T> Class<*>.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T? = this.kotlin.createInner(handler)
 
 /**
  *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [KClass];
- *  the try of the return value is [Any]?.
+ *  the type of the return value is [Any]?.
  *
  *  [Demo]. [Code].
  *
@@ -227,7 +229,8 @@ fun <T> Class<*>.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null):
  *      }
  *
  *   ```
- *  @param args the parameters when call constructor
+ *  @param handler the lambda parameter when create anonymous inner class instance,
+ *  in which can call [CallInnerHandler.override] to implement methods of interface
  */
 @Throws(ReflectException::class)
 fun KClass<*>.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) = createInner(handler)
@@ -250,16 +253,18 @@ fun KClass<*>.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) 
  *      }
  *
  *   ```
- *  @param args the parameters when call constructor
+ *  @param handler the lambda parameter when create anonymous inner class instance,
+ *  in which can call [CallInnerHandler.override] to implement methods of interface
  */
+@Suppress("UNCHECKED_CAST")
 @Throws(ReflectException::class)
 fun <T> KClass<*>.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T? {
 
     val callInnerHandler = CallInnerHandler<T>().apply {
         if (handler != null) handler()
     }
-    try {
-        return Proxy.newProxyInstance(this.java.classLoader, arrayOf(this.java)) { proxy, method, args ->
+    return try {
+        Proxy.newProxyInstance(this.java.classLoader, arrayOf(this.java)) { proxy, method, args ->
             return@newProxyInstance callInnerHandler.invoke(proxy, method, args)
         } as? T
     } catch (e: Throwable) {
@@ -267,10 +272,9 @@ fun <T> KClass<*>.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null)
     }
 }
 
-
 @Suppress("UNCHECKED_CAST")
 @Throws(ReflectException::class)
-operator fun <R> KCallable<*>.invoke(vararg args: Any?): R? {
+private operator fun <R> KCallable<*>.invoke(vararg args: Any?): R? {
     try {
         return when (this.parameters.firstOrNull()?.kind) {
             KParameter.Kind.INSTANCE -> {
@@ -334,7 +338,6 @@ fun <R : Any> Any?.property(propertyName: String?): CallProperty<R> = propertyNa
 }
         ?: throw ReflectException("The param [propertyName](value = $propertyName) can not be null or blank")
 
-
 @Suppress("UNCHECKED_CAST")
 @Throws(ReflectException::class)
 private fun parseKClassByClassName(className: String): KClass<*> = className.ifNotNullOrBlank {
@@ -344,7 +347,6 @@ private fun parseKClassByClassName(className: String): KClass<*> = className.ifN
         throw ReflectException(e)
     }
 } ?: throw ReflectException("The param [className](value = $className) can not be null or blank")
-
 
 @Throws(ReflectException::class)
 private fun parseKClassByInstance(instance: Any?, callableName: String? = null): KClass<*> = instance?.let {
@@ -358,7 +360,6 @@ private fun parseKClassByInstance(instance: Any?, callableName: String? = null):
 }
 ?: throw ReflectException("The param [callableName](value = $callableName) can not be null or blank when [instance] is null")
 
-
 @Throws(ReflectException::class)
 private fun parseKClassByCallableName(callableName: String): KClass<*> {
     if (callableName.contains(".")) {
@@ -367,7 +368,6 @@ private fun parseKClassByCallableName(callableName: String): KClass<*> {
         throw ReflectException("Can not parse KClass from callableName(value = $callableName)")
     }
 }
-
 
 @Throws(ReflectException::class)
 private fun parseKProperty(clazz: KClass<*>, simplePropertyName: String, type: KClass<*>? = null): KProperty<*>? {
@@ -399,10 +399,10 @@ private fun Collection<KCallable<*>>.firstMatchProperty(simpleCallableName: Stri
 private fun Collection<KCallable<*>>.firstMatchFunction(simpleCallableName: String? = null, types: Array<KClass<*>>) = this.firstOrNull {
     it is KFunction
             && (simpleCallableName == null || it.name == simpleCallableName)
-            && it.parameters.sameAs(types.asList())
+            && it.parameters.sameAsOrSuperOf(types.asList())
 } as? KFunction<*>
 
-private fun List<KParameter>.sameAs(that: List<KClass<*>>): Boolean {
+private fun List<KParameter>.sameAsOrSuperOf(that: List<KClass<*>>): Boolean {
     this.filter { it.kind == KParameter.Kind.VALUE }
             .also { if (it.size != that.size) return false }
             .forEachIndexed { index, kParameter ->
@@ -413,10 +413,18 @@ private fun List<KParameter>.sameAs(that: List<KClass<*>>): Boolean {
     return true
 }
 
+private fun List<Class<*>>.sameAsOrSubOf(that: List<KClass<*>>): Boolean {
+    this.also { if (it.size != that.size) return false }
+            .forEachIndexed { index, parameterClass ->
+                if (that[index] != parameterClass
+                        && (!parameterClass.isAssignableFrom(that[index].java))) return false
+            }
+    return true
+}
+
 private fun <T> Array<T>.dropFirst(): Array<T> =
         if (this.isEmpty()) this
         else this.copyOfRange(1, this.size)
-
 
 private fun parseKotlinTypes(vararg values: Any?): Array<KClass<*>> {
     if (values.isEmpty()) {
@@ -432,15 +440,44 @@ private fun parseKotlinTypes(vararg values: Any?): Array<KClass<*>> {
 
 class CallInnerHandler<P> {
 
-    private val handlerMap = mutableMapOf<String, ICallHandlerFunction<P>>()
+    private val handlerMap = HandlerMap<P>()
+
+    class HandlerMap<P> {
+
+        private val mCallHandlerMap = mutableMapOf<String, ArrayList<ICallHandlerFunction<P>>>()
+
+        operator fun set(key: String, value: ICallHandlerFunction<P>) {
+            mCallHandlerMap[key]
+                    ?: ArrayList<ICallHandlerFunction<P>>().apply { mCallHandlerMap[key] = this }.let { list ->
+                        if (!list.contains(value)) list.add(value)
+                    }
+        }
+
+        operator fun get(method: Method): ICallHandlerFunction<P>? {
+            mCallHandlerMap[method.name]?.let { list ->
+
+                var targetHandler: ICallHandlerFunction<P>? = null
+
+                list.forEach { handler ->
+                    if (handler.parameterTypes == null) {
+                        if (targetHandler == null) targetHandler = handler
+                    } else {
+                        val parameterTypes = handler.parameterTypes
+                        if (parameterTypes != null && method.parameterTypes.toList().sameAsOrSubOf(parameterTypes)) targetHandler = handler
+                    }
+                }
+                return targetHandler
+            }
+            return null
+        }
+    }
 
     fun invoke(proxy: Any?, method: Method?, args: Array<out Any?>?): Any? {
         method?.let { methodNo ->
-            handlerMap[methodNo.name]?.let { handler ->
+            handlerMap[methodNo]?.let { handler ->
                 return handler.call(proxy, args)
             }
         }
-
         return null
     }
 
