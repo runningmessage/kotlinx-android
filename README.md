@@ -47,6 +47,38 @@ ivy
 	    <artifact name="kotlinx-widget" ext="pom"></artifact>
     </dependency>
 ```
+---
+## kotlinx-reflect
+Some functions to make reflective calls.
+
+
+### simple example
+
+````java
+        import com.runningmessage.kotlinx.reflect.*
+
+        lateinit var context: Context
+
+        val Builder = "android.support.v7.app.AlertDialog${'$'}Builder"
+        val OnClickListener = "android.content.DialogInterface${'$'}OnClickListener"
+
+        Builder(context)                            // Like AlertDialog.Builder(context)
+               .calls("setTitle")("Hello World")    // Call matched specific named function
+               .calls("setPositiveButton")("OK",
+                OnClickListener.createInners{       // Like object: DialogInterface.OnClickListener
+                    /***
+                     *  Like:
+                     *  override fun onClick(dialog: Any, which: Int){
+                     *
+                     *  }
+                     */
+                    override<Any, Int>("onClick"){ dialog, which ->
+
+                    }
+                })
+               .calls("create")
+               .calls("show")                       // Like builder.create().show()
+````
 ---  
 ## kotlinx-widget
 AbsSwipeRefreshLayout<ProgressView, RemindView>:
