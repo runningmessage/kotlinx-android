@@ -21,14 +21,89 @@ import kotlin.reflect.*
 import kotlin.reflect.full.isSubclassOf
 
 /**
+ * Some functions to make reflective calls.
+ *
+ * Any example comes at below:
+ *
+ * [Demo]. [Code].
+ *
+ * ```java
+ *      import com.runningmessage.kotlinx.reflect.*
+ *
+ *      lateinit var context: Context
+ *
+ *      val Builder = "android.support.v7.app.AlertDialog${'$'}Builder"
+ *      val OnClickListener = "android.content.DialogInterface${'$'}OnClickListener"
+ *
+ *      Builder(context)
+ *             .calls("setTitle")("Hello World")
+ *             .calls("setPositiveButton")("OK", OnClickListener.createInners{
+ *
+ *                  override<Any, Int>("onClick"){ dialog, which ->
+ *
+ *                  }
+ *              })
+ *             .calls("create")
+ *             .calls("show")
+ *
+ * ```
+ *
  * Created by Lorss on 20-1-7.
  */
+val README = Unit
 
+/**
+ *  Call a matched constructor of the [KClass], which class name is same as the receiver [String] name;
+ *  then try casting the return value to type [T].
+ *
+ *  [Demo]. [Code].
+ *
+ *  ```java
+ *
+ *      val Builder: String = "android.support.v7.app.AlertDialog${'$'}Builder"
+ *
+ *      val builder: Any? = Builder(context)
+ *
+ *   ```
+ *
+ *  @param args the parameters when call constructor
+ */
 @Throws(ReflectException::class)
 operator fun <T> String.invoke(vararg args: Any?): T? = parseKClassByClassName(this)(*args)
 
+/**
+ *  Call a matched constructor of the [Class] and try casting the return value to type [T].
+ *
+ *  [Demo]. [Code].
+ *
+ *  ```java
+ *
+ *      val Builder: Class<*> = Class.forName("android.support.v7.app.AlertDialog${'$'}Builder")
+ *
+ *      val builder: Any? = Builder(context)
+ *
+ *   ```
+ *
+ *  @param args the parameters when call constructor
+ */
 @Throws(ReflectException::class)
-operator fun <T> Class<*>.invoke(vararg args: Any?): T? = null
+operator fun <T> Class<*>.invoke(vararg args: Any?): T? = this.kotlin.invoke(*args)
+
+/**
+ *  Call a matched constructor of the [KClass] and try casting the return value to type [T].
+ *
+ *  [Demo]. [Code].
+ *
+ *  ```java
+ *
+ *      val Builder: KClass<*> = Class.forName("android.support.v7.app.AlertDialog${'$'}Builder").kotlin
+ *
+ *      val builder: Any? = Builder(context)
+ *
+ *   ```
+ *
+ *  @param args the parameters when call constructor
+ */
 
 @Throws(ReflectException::class)
 operator fun <T> KClass<*>.invoke(vararg args: Any?): T? {
@@ -41,21 +116,142 @@ operator fun <T> KClass<*>.invoke(vararg args: Any?): T? {
             ?: throw ReflectException("Can not find the matched constructor in [this](value = $this)")
 }
 
+
+/**
+ *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [KClass], which class name is same as the receiver [String] name;
+ *  the try of the return value is [Any]?.
+ *
+ *  [Demo]. [Code].
+ *
+ *  ```java
+ *
+ *      val OnClickListener = "android.content.DialogInterface${'$'}OnClickListener"
+ *
+ *      val listener: Any? = OnClickListener.createInners{
+ *
+ *           override<Any, Int>("onClick"){ dialog, which ->
+ *
+ *           }
+ *      }
+ *
+ *   ```
+ *  @param args the parameters when call constructor
+ */
 @Throws(ReflectException::class)
 fun String.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) = createInner(handler)
 
+/**
+ *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [KClass], which class name is same as the receiver [String] name;
+ *  then try casting the return value to type [T].
+ *
+ *  [Demo]. [Code].
+ *
+ *  ```java
+ *
+ *      val OnClickListener = "android.content.DialogInterface${'$'}OnClickListener"
+ *
+ *      val listener: Any? = OnClickListener.createInner{
+ *
+ *           override<Any, Int>("onClick"){ dialog, which ->
+ *
+ *           }
+ *      }
+ *
+ *   ```
+ *  @param args the parameters when call constructor
+ */
 @Throws(ReflectException::class)
 fun <T> String.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T? = parseKClassByClassName(this).createInner(handler)
 
+/**
+ *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [Class];
+ *  the try of the return value is [Any]?.
+ *
+ *  [Demo]. [Code].
+ *
+ *  ```java
+ *
+ *      val OnClickListener = Class.forName("android.content.DialogInterface${'$'}OnClickListener")
+ *
+ *      val listener: Any? = OnClickListener.createInners{
+ *
+ *           override<Any, Int>("onClick"){ dialog, which ->
+ *
+ *           }
+ *      }
+ *
+ *   ```
+ *  @param args the parameters when call constructor
+ */
 @Throws(ReflectException::class)
 fun Class<*>.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) = createInner(handler)
 
+/**
+ *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [Class];
+ *  then try casting the return value to type [T].
+ *
+ *  [Demo]. [Code].
+ *
+ *  ```java
+ *
+ *      val OnClickListener = Class.forName("android.content.DialogInterface${'$'}OnClickListener")
+ *
+ *      val listener: Any? = OnClickListener.createInners{
+ *
+ *           override<Any, Int>("onClick"){ dialog, which ->
+ *
+ *           }
+ *      }
+ *
+ *   ```
+ *  @param args the parameters when call constructor
+ */
 @Throws(ReflectException::class)
-fun <T> Class<*>.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T? = null
+fun <T> Class<*>.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T? = this.kotlin.createInner(handler)
 
+/**
+ *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [KClass];
+ *  the try of the return value is [Any]?.
+ *
+ *  [Demo]. [Code].
+ *
+ *  ```java
+ *
+ *      val OnClickListener = Class.forName("android.content.DialogInterface${'$'}OnClickListener").kotlin
+ *
+ *      val listener: Any? = OnClickListener.createInners{
+ *
+ *           override<Any, Int>("onClick"){ dialog, which ->
+ *
+ *           }
+ *      }
+ *
+ *   ```
+ *  @param args the parameters when call constructor
+ */
 @Throws(ReflectException::class)
 fun KClass<*>.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) = createInner(handler)
 
+/**
+ *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [KClass];
+ *  then try casting the return value to type [T].
+ *
+ *  [Demo]. [Code].
+ *
+ *  ```java
+ *
+ *      val OnClickListener = Class.forName("android.content.DialogInterface${'$'}OnClickListener").kotlin
+ *
+ *      val listener: Any? = OnClickListener.createInners{
+ *
+ *           override<Any, Int>("onClick"){ dialog, which ->
+ *
+ *           }
+ *      }
+ *
+ *   ```
+ *  @param args the parameters when call constructor
+ */
 @Throws(ReflectException::class)
 fun <T> KClass<*>.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T? {
 
@@ -247,7 +443,6 @@ class CallInnerHandler<P> {
 
         return null
     }
-
 
     fun override(methodName: String, handler: CallHandlerFunction<P>) {
         handlerMap[methodName] = handler
