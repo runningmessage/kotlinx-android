@@ -76,8 +76,7 @@ Some functions to make reflective calls.
 
                     }
                 })
-               .calls("create")
-               .calls("show")                       // Like builder.create().show()
+               .calls("create").calls("show")()     // Like builder.create().show()
 ````
 ---  
 ## kotlinx-widget

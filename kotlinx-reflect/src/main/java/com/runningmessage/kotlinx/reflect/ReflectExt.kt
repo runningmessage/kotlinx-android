@@ -37,16 +37,21 @@ import kotlin.reflect.full.isSubclassOf
  *      val Builder = "android.support.v7.app.AlertDialog${'$'}Builder"
  *      val OnClickListener = "android.content.DialogInterface${'$'}OnClickListener"
  *
- *      Builder(context)
- *             .calls("setTitle")("Hello World")
- *             .calls("setPositiveButton")("OK", OnClickListener.createInners{
- *
+ *      Builder(context)                            // Like AlertDialog.Builder(context)
+ *             .calls("setTitle")("Hello World")    // Call matched specific named function
+ *             .calls("setPositiveButton")("OK",
+ *             OnClickListener.createInners{        // Like object: DialogInterface.OnClickListener
+ *                  /***
+ *                   *   Like:
+ *                   *   override fun onClick(dialog: Any, which: Int){
+ *                   *
+ *                   *   }
+ *                    */
  *                  override<Any, Int>("onClick"){ dialog, which ->
  *
  *                  }
  *              })
- *             .calls("create")
- *             .calls("show")
+ *             .calls("create").calls("show")()     // Like builder.create().show()
  *
  * ```
  *
@@ -57,8 +62,8 @@ private val Demo = README
 private val Code = README
 
 /**
- *  Call a matched constructor of the [KClass], which class name is same as the receiver [String] name;
- *  then try casting the return value to type [T].
+ *  Call a matched constructor of the [KClass] which class name is same as the receiver [String] name;
+ *  then try casting the type of the return value to type [T] or return null.
  *
  *  [Demo]. [Code].
  *
@@ -76,7 +81,7 @@ private val Code = README
 operator fun <T> String.invoke(vararg args: Any?): T? = parseKClassByClassName(this)(*args)
 
 /**
- *  Call a matched constructor of the [Class] and try casting the return value to type [T].
+ *  Call a matched constructor of the [Class] and try casting the type of the return value to type [T] or return null.
  *
  *  [Demo]. [Code].
  *
@@ -94,7 +99,7 @@ operator fun <T> String.invoke(vararg args: Any?): T? = parseKClassByClassName(t
 operator fun <T> Class<*>.invoke(vararg args: Any?): T? = this.kotlin.invoke(*args)
 
 /**
- *  Call a matched constructor of the [KClass] and try casting the return value to type [T].
+ *  Call a matched constructor of the [KClass] and try casting the type of the return value to type [T] or return null.
  *
  *  [Demo]. [Code].
  *
@@ -120,8 +125,9 @@ operator fun <T> KClass<*>.invoke(vararg args: Any?): T? {
 }
 
 /**
- *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [KClass], which class name is same as the receiver [String] name;
- *  the type of the return value is [Any]?.
+ *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [KClass] which class name is same as the receiver [String] name;
+ *
+ *  return the value which type is [Any]?.
  *
  *  [Demo]. [Code].
  *
@@ -145,7 +151,8 @@ fun String.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) = c
 
 /**
  *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [KClass], which class name is same as the receiver [String] name;
- *  then try casting the return value to type [T].
+ *
+ *  then try casting the type of the return value to type [T] or return null.
  *
  *  [Demo]. [Code].
  *
@@ -169,7 +176,8 @@ fun <T> String.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T
 
 /**
  *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [Class];
- *  the type of the return value is [Any]?.
+ *
+ *  return the value which type is [Any]?.
  *
  *  [Demo]. [Code].
  *
@@ -193,7 +201,8 @@ fun Class<*>.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) =
 
 /**
  *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [Class];
- *  then try casting the return value to type [T].
+ *
+ *  then try casting the type of the return value to type [T] or return null.
  *
  *  [Demo]. [Code].
  *
@@ -217,7 +226,8 @@ fun <T> Class<*>.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null):
 
 /**
  *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [KClass];
- *  the type of the return value is [Any]?.
+ *
+ *  return the value which type is [Any]?.
  *
  *  [Demo]. [Code].
  *
@@ -241,7 +251,8 @@ fun KClass<*>.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) 
 
 /**
  *  Create an anonymous class instance by calling [Proxy.newProxyInstance] using the interface [KClass];
- *  then try casting the return value to type [T].
+ *
+ *  then try casting the type of the return value to type [T] or return null.
  *
  *  [Demo]. [Code].
  *
@@ -296,15 +307,87 @@ private operator fun <R> KCallable<*>.invoke(vararg args: Any?): R? {
     }
 }
 
+/***
+ *  Call a matched static function which full name with package is [callableName]
+ *
+ *  and after two different invoke ( e.g. [callsStatic(callableName)][callsStatic] [( args )][CallMedia.invoke] ),
+ *
+ *  to return the final return value which type is [Any]?.
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      val getSerial = "android.os.Build${'$'}getSerial"
+ *      callsStatic(getSerial)()
+ *
+ *  ```
+ */
 @Throws(ReflectException::class)
-fun calls(callableName: String?) = call<Any>(callableName)
+fun callsStatic(callableName: String?) = callStatic<Any>(callableName)
 
+/***
+ *  Call a matched static function which full name with package is [callableName]
+ *
+ *  and after two different invoke ( e.g. [callStatic<R>(callableName)][callStatic] [( args )][CallMedia.invoke] ),
+ *
+ *  then try casting the type of the final return value to type [R] or return final value null.
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      val getSerial = "android.os.Build${'$'}getSerial"
+ *      callStatic<String>(getSerial)()
+ *
+ *  ```
+ */
 @Throws(ReflectException::class)
-fun <R> call(callableName: String?) = null.call<R>(callableName)
+fun <R> callStatic(callableName: String?) = null.call<R>(callableName)
 
+/***
+ *  Call a matched member function of [Any?][this] which simple name or full name with package is [callableName]
+ *
+ *  and after two different invoke ( e.g. [obj.calls(callableName)][calls] [( args )][CallMedia.invoke] ), (specially if obj is null , it's same to [callsStatic]),
+ *
+ *  to return the final return value which type is [Any]?.
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      lateinit var context: Context
+ *
+ *      val Builder = "android.support.v7.app.AlertDialog${'$'}Builder"
+ *
+ *      Builder(context)
+ *             .calls("setTitle")("Hello World")
+ *
+ *  ```
+ */
 @Throws(ReflectException::class)
 fun Any?.calls(callableName: String?) = this.call<Any>(callableName)
 
+/***
+ *  Call a matched member function of [Any?][this] which simple name or full name with package is [callableName]
+ *
+ *  and after two different invoke ( e.g. [obj.call<R>(callableName)][call] [( args )][CallMedia.invoke] ), (specially if obj is null , it's same to [callStatic]),
+ *
+ *  then try casting the type of the final return value to type [R] or return final value null.
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      lateinit var context: Context
+ *
+ *      val Builder = "android.support.v7.app.AlertDialog${'$'}Builder"
+ *
+ *      Builder(context)
+ *             .call<Any>("setTitle")("Hello World")
+ *
+ *  ```
+ */
 @Throws(ReflectException::class)
 fun <R> Any?.call(callableName: String?): CallMedia<R> = callableName.ifNotNullOrBlank { fullCallableName ->
 
@@ -319,15 +402,89 @@ fun <R> Any?.call(callableName: String?): CallMedia<R> = callableName.ifNotNullO
 }
         ?: throw ReflectException("The param [callableName](value = $callableName) can not be null or blank")
 
+/***
+ *  Call a matched static property which full name with package is [propertyName]
+ *
+ *  and after two different invoke ( e.g. [propertysStatic(propertyName)][propertysStatic] [.value][CallProperty.value] ),
+ *
+ *  and you can get the final proxy property [value][CallProperty.value] which type is [Any]? and can be used same to immediately call reflective static target property.
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      val SDK_INT = "android.os.Build${'$'}VERSION${'$'}SDK_INT"
+ *      propertysStatic(SDK_INT).value
+ *
+ *  ```
+ */
 @Throws(ReflectException::class)
-fun propertys(propertyName: String?) = property<Any>(propertyName)
+fun propertysStatic(propertyName: String?) = propertyStatic<Any>(propertyName)
 
+/***
+ *  Call a matched static property which full name with package is [propertyName]
+ *
+ *  and after two different invoke ( e.g. [propertysStatic<R>(propertyName)][propertyStatic] [.value][CallProperty.value] ),
+ *
+ *  and you can get the final proxy property [value][CallProperty.value] which type is [R]? and can be used same to immediately call reflective static target property.
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      val SDK_INT = "android.os.Build${'$'}VERSION${'$'}SDK_INT"
+ *      propertysStatic<Int>(SDK_INT).value
+ *
+ *  ```
+ */
 @Throws(ReflectException::class)
-fun <R : Any> property(propertyName: String?) = null.property<R>(propertyName)
+fun <R : Any> propertyStatic(propertyName: String?) = null.property<R>(propertyName)
 
+/***
+ *  Call a matched member property which simple name or full name with package is [propertyName]
+ *
+ *  and after two different invoke ( e.g. [obj.propertys(propertyName)][propertys] [.value][CallProperty.value] ), (specially if obj is null , it's same to [propertysStatic]),
+ *
+ *  and you can get the final proxy property [value][CallProperty.value] which type is [Any]? and can be used same to immediately call reflective member target property.
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      lateinit var context: Context
+ *
+ *      val MyLoadMoreRecyclerAdapter = "com.runningmessage.kotlinx.demo.MyLoadMoreRecyclerAdapter"
+ *
+ *      val adapter: Any? = MyLoadMoreRecyclerAdapter(context)
+ *
+ *      adapter.propertys("isAutoLoadMore").value = false
+ *
+ *  ```
+ */
 @Throws(ReflectException::class)
 fun Any?.propertys(propertyName: String?) = this.property<Any>(propertyName)
 
+/***
+ *  Call a matched member property which simple name or full name with package is [propertyName]
+ *
+ *  and after two different invoke ( e.g. [obj.propertys<R>(propertyName)][property] [.value][CallProperty.value] ), (specially if obj is null , it's same to [propertyStatic]),
+ *
+ *  and you can get the final proxy property [value][CallProperty.value] which type is [R]? and can be used same to immediately call reflective member target property.
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      lateinit var context: Context
+ *
+ *      val MyLoadMoreRecyclerAdapter = "com.runningmessage.kotlinx.demo.MyLoadMoreRecyclerAdapter"
+ *
+ *      val adapter: Any? = MyLoadMoreRecyclerAdapter(context)
+ *
+ *      adapter.property<Boolean>("isAutoLoadMore").value = false
+ *
+ *  ```
+ */
 @Throws(ReflectException::class)
 fun <R : Any> Any?.property(propertyName: String?): CallProperty<R> = propertyName.ifNotNullOrBlank { fullPropertyName ->
 
@@ -442,6 +599,27 @@ private fun parseKotlinTypes(vararg values: Any?): Array<KClass<*>> {
     return result
 }
 
+/***
+ *  The medium class type for parameter passed to [createInner]/[createInners],
+ *
+ *  which makes you can add appended lambda parameter when create anonymous inner class instance,
+ *  in which can call [CallInnerHandler.override] to implement methods of interface.
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      val OnClickListener = Class.forName("android.content.DialogInterface${'$'}OnClickListener")
+ *
+ *      val listener: Any? = OnClickListener.createInners{
+ *
+ *           override<Any, Int>("onClick"){ dialog, which ->
+ *
+ *           }
+ *      }
+ *
+ *  ```
+ */
 class CallInnerHandler<P> {
 
     private val handlerMap = HandlerMap<P>()
@@ -573,6 +751,31 @@ abstract class CallInvoke<N> {
     fun <R : Any> property(propertyName: String?): CallProperty<R> = beforeNextCall().property(propertyName)
 }
 
+/***
+ *  The medium class after reflective [calls]/[call],
+ *
+ *  which makes you can add appended [( )][CallMedia.invoke] to pass parameters for previous reflective [calls]/[call].
+ *
+ *  In addition, if you do not care about the final return value for medium (Not last) reflective calling no parameter function
+ *
+ *  and just want to make followed calling function/property for the final return value of previous calling,
+ *
+ *  then you can write like this , to remove the second "()" for previous [calls]/[call]:
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      lateinit var context: Context
+ *
+ *      val Builder = "android.support.v7.app.AlertDialog${'$'}Builder"
+ *
+ *      Builder(context)
+ *              .calls("create")    // Like .calls("create")()
+ *              .calls("show")()    // Warn !!! Can Not remove the second () for last call
+ *
+ *  ```
+ */
 class CallMedia<R>(
         private val kotlinClass: KClass<*>,
         private val instance: Any?,
@@ -581,6 +784,9 @@ class CallMedia<R>(
 
     override fun beforeNextCall() = invoke()
 
+    /***
+     * The operator function [( )][CallMedia.invoke] to pass parameters for reflective call.
+     */
     @Throws(ReflectException::class)
     operator fun invoke(vararg args: Any?): R? {
         val types = parseKotlinTypes(*args)
@@ -592,6 +798,31 @@ class CallMedia<R>(
     }
 }
 
+/***
+ *  The medium class after reflective [propertys]/[property],
+ *
+ *  which makes you can add appended [.value][CallProperty.value] to get the proxy property [value][CallProperty.value] which type is [R]? and can be used same to immediately call reflective target property.
+ *
+ *  In addition, if you do not care about the final return value for medium (Not last) reflective calling property
+ *
+ *  and just want to make followed calling function/property for the final return value of previous calling,
+ *
+ *  then you can write like this , to remove the [.value][CallProperty.value] for previous [propertys]/[property]:
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      lateinit var itemView: View
+ *
+ *      val MyLoadMoreFooter = "com.runningmessage.kotlinx.demo.MyLoadMoreFooter"
+ *
+ *      MyLoadMoreFooter(itemView)
+ *              .property<String>("message")        // Like .property<String>("message").value
+ *              .property<Int>("length").value      // Warn !!! Can Not remove .value for last call
+ *
+ *  ```
+ */
 class CallProperty<R : Any>(
         private val kotlinClass: KClass<*>,
         private val instance: Any?,
