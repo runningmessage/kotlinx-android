@@ -54,6 +54,8 @@ Some functions to make reflective calls.
 
 ### simple example
 
+Demo.01
+
 ````java
         import com.runningmessage.kotlinx.reflect.*
 
@@ -78,7 +80,33 @@ Some functions to make reflective calls.
                 })
                .calls("create").calls("show")()     // Like builder.create().show()
 ````
----  
+
+Demo.02
+
+````java
+
+        val TextWatcher = "android.text.TextWatcher"
+
+        val watcher = TextWatcher.createInners{
+
+
+            override<CharSequence, Int, Int, Int>("beforeTextChanged"){
+                s, start, before, count ->
+
+            }
+
+            override("onTextChanged"){
+                s: CharSequence?, start: Int?, before: Int?, count: Int? ->
+
+            }
+
+            override("onTextChanged", CallHandlerFunction { args: Array<out Any?>? ->
+                val s = args?.get(0) as? Editable
+
+            })
+        }
+````
+---
 ## kotlinx-widget
 AbsSwipeRefreshLayout<ProgressView, RemindView>:
 
