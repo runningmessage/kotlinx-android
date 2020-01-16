@@ -387,12 +387,27 @@ fun <T : Any, R> Any?.ifIs(clazz: Class<*>, block: (T) -> R): R? = this.ifIs(cla
 @Suppress("UNCHECKED_CAST")
 fun <T : Any, R> Any?.ifIs(kClass: KClass<*>, block: (T) -> R): R? {
     var obj: T? = null
-    if (this != null && this::class.isSubclassOf(kClass)) {
+    if (this iss kClass) {
         obj = this as? T
     }
     if (obj != null) return block(obj)
     return null
 }
+
+/**
+ *  return whether the type of receiver [this][Any] is subclass of [KClass] which class name is [className].
+ */
+infix fun Any?.iss(className: String) = this iss parseKClassByClassName(className)
+
+/**
+ *  return whether the type of receiver [this][Any] is subclass of [clazz].
+ */
+infix fun Any?.iss(clazz: Class<*>) = this iss clazz.kotlin
+
+/**
+ *  return whether the type of receiver [this][Any] is subclass of [kClass].
+ */
+infix fun Any?.iss(kClass: KClass<*>) = this != null && this::class.isSubclassOf(kClass)
 
 
 /***
