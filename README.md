@@ -4,17 +4,25 @@
 
 ---  
 maven
-```maven
+```xml
+    <dependency>
+        <groupId>com.runningmessage.kotlinx-android</groupId>
+        <artifactId>kotlinx-reflect</artifactId>
+        <version>0.0.7</version>
+        <type>pom</type>
+    </dependency>
+
     <dependency>
         <groupId>com.runningmessage.kotlinx-android</groupId>
         <artifactId>kotlinx-common</artifactId>
-        <version>0.0.3</version>
+        <version>0.0.7</version>
         <type>pom</type>
     </dependency>
+
     <dependency>
         <groupId>com.runningmessage.kotlinx-android</groupId>
         <artifactId>kotlinx-widget</artifactId>
-        <version>0.0.3</version>
+        <version>0.0.7</version>
         <type>pom</type>
     </dependency>
 ```
@@ -33,17 +41,22 @@ gradle
     }
     
     //app build.gradle
-    compile 'com.runningmessage.kotlinx-android:kotlinx-common:0.0.3'
-    compile 'com.runningmessage.kotlinx-android:kotlinx-widget:0.0.3'
+    compile 'com.runningmessage.kotlinx-android:kotlinx-reflect:0.0.7'
+    compile 'com.runningmessage.kotlinx-android:kotlinx-common:0.0.7'
+    compile 'com.runningmessage.kotlinx-android:kotlinx-widget:0.0.7'
 ```
 ---  
 ivy
-```ivy
-    <dependency org="com.runningmessage.kotlinx-android" name="kotlinx-common" rev="0.0.3">
+```xml
+    <dependency org="com.runningmessage.kotlinx-android" name="kotlinx-reflect" rev="0.0.7">
+	    <artifact name="kotlinx-common" ext="pom"></artifact>
+    </dependency>
+
+    <dependency org="com.runningmessage.kotlinx-android" name="kotlinx-common" rev="0.0.7">
 	    <artifact name="kotlinx-common" ext="pom"></artifact>
     </dependency>
     
-    <dependency org="com.runningmessage.kotlinx-android" name="kotlinx-widget" rev="0.0.3">
+    <dependency org="com.runningmessage.kotlinx-android" name="kotlinx-widget" rev="0.0.7">
 	    <artifact name="kotlinx-widget" ext="pom"></artifact>
     </dependency>
 ```
@@ -54,9 +67,10 @@ Some functions to make reflective calls.
 
 ### simple example
 
-Demo.01
+Demo.01 simple example
 
 ````java
+
         import com.runningmessage.kotlinx.reflect.*
 
         lateinit var context: Context
@@ -79,9 +93,93 @@ Demo.01
                     }
                 })
                .calls("create").calls("show")()     // Like builder.create().show()
+
 ````
 
-Demo.02
+Demo.02 Call function by reflect
+
+```java
+
+        private lateinit var activity: Any
+
+        activity.runInActivity()
+
+        private fun Any.runInActivity() {// In the code below , [this] is Activity Object
+
+            /***
+             * setContentView(R.layout.activity_main)
+             * ***/
+            calls("setContentView")(R.layout.activity_main)
+
+            /***
+             * val npRecyclerView = findViewById<ViewGroup>(R.id.npRecyclerView)
+             * ***/
+            val npRecyclerView = call<ViewGroup>("findViewById")(R.id.npRecyclerView)
+
+            ... ...
+
+         }
+
+```
+Demo.03 Create instance by reflect
+
+```java
+
+        /***************************** Import to reflect *****************************/
+        /**  The string below can be used just same as declared class in the code   **/
+
+        private const val MyLoadMoreRecyclerAdapter = "com.runningmessage.kotlinx.demo.MyLoadMoreRecyclerAdapter"
+        private const val StaggeredGridLayoutManager = "android.support.v7.widget.StaggeredGridLayoutManager"
+
+        private fun Any.runInActivity() {// In the code below , [this] is Activity Object
+
+            ... ..
+
+            // set the load more recycler adapter
+            val applicationContext = call<Context>("getApplicationContext")()
+
+            /***
+             * the declared string [MyLoadMoreRecyclerAdapter] can be used same as class which is imported
+             *
+             * val adapter = com.runningmessage.kotlinx.demo.MyLoadMoreRecyclerAdapter(applicationContext)
+             * ***/
+            val adapter: Any? = MyLoadMoreRecyclerAdapter(applicationContext)
+
+            /***
+             * the declared string [StaggeredGridLayoutManager] can be used same as class which is imported
+             *
+             * npRecyclerView.setLayoutManager(StaggeredGridLayoutManager(2, 1))
+             * ***/
+            npRecyclerView.calls("setLayoutManager")(StaggeredGridLayoutManager(2, 1))
+
+            ... ...
+        }
+
+```
+
+Demo.04 Call property by reflect
+
+```java
+
+        private fun Any.runInActivity() {// In the code below , [this] is Activity Object
+
+            ... ..
+
+            /***
+             * adapter.isAutoLoadMore = false
+             ***/
+            adapter.propertys("isAutoLoadMore").value = false
+
+            /***
+             * val count = adapter.dataCount
+             ***/
+            val count = adapter.property<Int>("dataCount").value ?: 0
+
+            ... ...
+        }
+
+```
+Demo.05 Create anonymous inner class instance by reflect
 
 ````java
 
@@ -89,17 +187,31 @@ Demo.02
 
         val watcher = TextWatcher.createInners{
 
-
+            /**
+             * override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+             *
+             * }
+             **/
             override<CharSequence, Int, Int, Int>("beforeTextChanged"){
                 s, start, before, count ->
 
             }
 
+            /**
+             * override fun onTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+             *
+             * }
+             **/
             override("onTextChanged"){
                 s: CharSequence?, start: Int?, before: Int?, count: Int? ->
 
             }
 
+            /**
+             * override fun afterTextChanged(s: Editable?) {
+             *
+             * }
+             **/
             override("onTextChanged", CallHandlerFunction { args: Array<out Any?>? ->
                 val s = args?.get(0) as? Editable
 
