@@ -307,6 +307,94 @@ private operator fun <R> KCallable<*>.invoke(vararg args: Any?): R? {
     }
 }
 
+/**
+ *  Do something in [block] if the type of receiver [this][Any] is subclass of [KClass] which class name is [className],
+ *
+ *  then try to return the value which type is [R]?
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      val AppCompatActivity = "android.support.v7.app.AppCompatActivity"
+ *
+ *      lateinit var activity: Any
+ *
+ *      activity.ifIs(AppCompatActivity) { appCompatActivity: Any ->
+ *          appCompatActivity.runInActivity()
+ *      }
+ *
+ *      // another sample
+ *      val context: Context? = activity.ifIs(AppCompatActivity) { appCompatActivity: Any ->
+ *          return@ifIs appCompatActivity.call<Context>("getApplicationContext")()
+ *      }
+ *
+ *  ```
+ */
+fun <T : Any, R> Any?.ifIs(className: String, block: (T) -> R): R? = this.ifIs(parseKClassByClassName(className), block)
+
+
+/**
+ *  Do something in [block] if the type of receiver [this][Any] is subclass of [clazz],
+ *
+ *  then try to return the value which type is [R]?
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      val AppCompatActivity = Class.forName("android.support.v7.app.AppCompatActivity")
+ *
+ *      lateinit var activity: Any
+ *
+ *      activity.ifIs(AppCompatActivity) { appCompatActivity: Any ->
+ *          appCompatActivity.runInActivity()
+ *      }
+ *
+ *      // another sample
+ *      val context: Context? = activity.ifIs(AppCompatActivity) { appCompatActivity: Any ->
+ *          return@ifIs appCompatActivity.call<Context>("getApplicationContext")()
+ *      }
+ *
+ *  ```
+ */
+fun <T : Any, R> Any?.ifIs(clazz: Class<*>, block: (T) -> R): R? = this.ifIs(clazz.kotlin, block)
+
+/**
+ *  Do something in [block] if the type of receiver [this][Any] is subclass of [kClass],
+ *
+ *  then try to return the value which type is [R]?
+ *
+ *  [Demo].[Code].
+ *
+ *  ```java
+ *
+ *      val AppCompatActivity = Class.forName("android.support.v7.app.AppCompatActivity").kotlin
+ *
+ *      lateinit var activity: Any
+ *
+ *      activity.ifIs(AppCompatActivity) { appCompatActivity: Any ->
+ *          appCompatActivity.runInActivity()
+ *      }
+ *
+ *      // another sample
+ *      val context: Context? = activity.ifIs(AppCompatActivity) { appCompatActivity: Any ->
+ *          return@ifIs appCompatActivity.call<Context>("getApplicationContext")()
+ *      }
+ *
+ *  ```
+ */
+@Suppress("UNCHECKED_CAST")
+fun <T : Any, R> Any?.ifIs(kClass: KClass<*>, block: (T) -> R): R? {
+    var obj: T? = null
+    if (this != null && this::class.isSubclassOf(kClass)) {
+        obj = this as? T
+    }
+    if (obj != null) return block(obj)
+    return null
+}
+
+
 /***
  *  Call a matched static function which full name with package is [callableName]
  *
