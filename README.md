@@ -185,7 +185,7 @@ Demo.05 Create anonymous inner class instance by reflect
 
         val TextWatcher = "android.text.TextWatcher"
 
-        val watcher = TextWatcher.createInners{
+        val watcher = TextWatcher.createInners{ // Like val watcher = object: TextWatcher{ ... ... }
 
             /**
              * override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
