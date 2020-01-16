@@ -140,6 +140,12 @@ operator fun <T> KClass<*>.invoke(vararg args: Any?): T? {
  *           override<Any, Int>("onClick"){ dialog, which ->
  *
  *           }
+ *
+ *           // you can also write like this
+ *
+ *           override("onClick"){ dialog: Any?, which: Int? ->
+ *
+ *           }
  *      }
  *
  *   ```
@@ -163,6 +169,12 @@ fun String.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) = c
  *      val listener: Any? = OnClickListener.createInner{
  *
  *           override<Any, Int>("onClick"){ dialog, which ->
+ *
+ *           }
+ *
+ *           // you can also write like this
+ *
+ *           override("onClick"){ dialog: Any?, which: Int? ->
  *
  *           }
  *      }
@@ -190,6 +202,12 @@ fun <T> String.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null): T
  *           override<Any, Int>("onClick"){ dialog, which ->
  *
  *           }
+ *
+ *           // you can also write like this
+ *
+ *           override("onClick"){ dialog: Any?, which: Int? ->
+ *
+ *           }
  *      }
  *
  *   ```
@@ -213,6 +231,12 @@ fun Class<*>.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) =
  *      val listener: Any? = OnClickListener.createInners{
  *
  *           override<Any, Int>("onClick"){ dialog, which ->
+ *
+ *           }
+ *
+ *           // you can also write like this
+ *
+ *           override("onClick"){ dialog: Any?, which: Int? ->
  *
  *           }
  *      }
@@ -240,6 +264,12 @@ fun <T> Class<*>.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null):
  *           override<Any, Int>("onClick"){ dialog, which ->
  *
  *           }
+ *
+ *           // you can also write like this
+ *
+ *           override("onClick"){ dialog: Any?, which: Int? ->
+ *
+ *           }
  *      }
  *
  *   ```
@@ -263,6 +293,12 @@ fun KClass<*>.createInners(handler: (CallInnerHandler<Any>.() -> Unit)? = null) 
  *      val listener: Any? = OnClickListener.createInners{
  *
  *           override<Any, Int>("onClick"){ dialog, which ->
+ *
+ *           }
+ *
+ *           // you can also write like this
+ *
+ *           override("onClick"){ dialog: Any?, which: Int? ->
  *
  *           }
  *      }
@@ -717,6 +753,12 @@ private fun parseKotlinTypes(vararg values: Any?): Array<KClass<*>> {
  *      val listener: Any? = OnClickListener.createInners{
  *
  *           override<Any, Int>("onClick"){ dialog, which ->
+ *
+ *           }
+ *
+ *           // you can also write like this
+ *
+ *           override("onClick"){ dialog: Any?, which: Int? ->
  *
  *           }
  *      }
