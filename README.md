@@ -223,7 +223,7 @@ Demo.05 Create anonymous inner class instance by reflect
              *
              * }
              **/
-            override("onTextChanged", CallHandlerFunction { args: Array<out Any?>? ->
+            override("afterTextChanged", CallHandlerFunction { args: Array<out Any?>? ->
                 val s = args?.get(0) as? Editable
 
             })
