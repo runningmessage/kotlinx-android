@@ -234,10 +234,10 @@ Demo.06 Call instanceOf/is by reflect
 
 ```java
 
-        val AppCompatActivity = Class.forName("android.support.v7.app.AppCompatActivity").kotlin
+        val AppCompatActivity = "android.support.v7.app.AppCompatActivity"
 
         lateinit var activity: Any
-  
+
         if(activity iss AppCompatActivity){
             // do something
         }
