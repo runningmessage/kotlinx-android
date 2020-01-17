@@ -229,6 +229,29 @@ Demo.05 Create anonymous inner class instance by reflect
             })
         }
 ````
+
+Demo.06 Call instanceOf/is by reflect
+
+```java
+
+        val AppCompatActivity = Class.forName("android.support.v7.app.AppCompatActivity").kotlin
+
+        lateinit var activity: Any
+  
+        if(activity iss AppCompatActivity){
+            // do something
+        }
+
+        activity.ifIs(AppCompatActivity) { appCompatActivity: Any ->
+            appCompatActivity.runInActivity()
+        }
+
+        // another sample
+        val context: Context? = activity.ifIs(AppCompatActivity) { appCompatActivity: Any ->
+            return@ifIs appCompatActivity.call<Context>("getApplicationContext")()
+        }
+
+```
 ---
 ## kotlinx-widget
 AbsSwipeRefreshLayout<ProgressView, RemindView>:
