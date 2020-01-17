@@ -116,6 +116,11 @@ Demo.02 Call function by reflect
              * ***/
             val npRecyclerView = call<ViewGroup>("findViewById")(R.id.npRecyclerView)
 
+            val makeText = "android.widget.Toast.makeText"
+
+            callsStatic(makeText)(applicationContext, "Hello World", 0)
+            .calls("show")()
+
             ... ...
 
          }
@@ -174,6 +179,12 @@ Demo.04 Call property by reflect
              * val count = adapter.dataCount
              ***/
             val count = adapter.property<Int>("dataCount").value ?: 0
+
+            val makeText = "android.widget.Toast.makeText"
+            val LENGTH_LONG = "android.widget.Toast.LENGTH_LONG"
+
+            callsStatic(makeText)(applicationContext, "Hello World", property<Int>(LENGTH_LONG)?: 0)
+            .calls("show")()
 
             ... ...
         }
