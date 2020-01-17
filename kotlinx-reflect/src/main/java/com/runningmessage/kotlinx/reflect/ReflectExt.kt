@@ -20,6 +20,7 @@ import com.runningmessage.kotlinx.common.ifNotNullOrBlank
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import kotlin.reflect.*
+import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSubclassOf
 
 /**
@@ -329,13 +330,13 @@ private operator fun <R> KCallable<*>.invoke(vararg args: Any?): R? {
     try {
         return when (this.parameters.firstOrNull()?.kind) {
             KParameter.Kind.INSTANCE -> {
-                this.call(*args) as R?
+                this.call(*args) as? R
             }
             KParameter.Kind.EXTENSION_RECEIVER -> {
-                this.call(*args) as R?
+                this.call(*args) as? R
             }
             else -> {
-                this.call(*(args.dropFirst())) as R?
+                this.call(*(args.dropFirst())) as? R
             }
         }
     } catch (e: Throwable) {
@@ -651,7 +652,17 @@ private fun parseKClassByClassName(className: String): KClass<*> = className.ifN
 @Throws(ReflectException::class)
 private fun parseKClassByInstance(instance: Any?, callableName: String? = null): KClass<*> = instance?.let {
     try {
-        return@let it::class
+        val kClass = it::class
+        if (callableName?.contains(".") != true) {
+            return@let kClass
+        }
+
+        val className = callableName.substringBeforeLast(".")
+        if (className == kClass.qualifiedName) {
+            return@let kClass
+        } else {
+            return@let parseKClassByClassName(className)
+        }
     } catch (e: Throwable) {
         throw ReflectException(e)
     }
@@ -894,6 +905,13 @@ abstract class CallInvoke<N> {
 
     @Throws(ReflectException::class)
     fun <R : Any> property(propertyName: String?): CallProperty<R> = beforeNextCall().property(propertyName)
+
+    protected fun parseCallTarget(kClass: KClass<*>, instance: Any?): Any? {
+        if (kClass.isCompanion) return kClass.objectInstance
+
+        return instance
+    }
+
 }
 
 /***
@@ -935,9 +953,14 @@ class CallMedia<R>(
     @Throws(ReflectException::class)
     operator fun invoke(vararg args: Any?): R? {
         val types = parseKotlinTypes(*args)
+        var fixKotlinClass = kotlinClass
         val callable = parseKFunction(kotlinClass, simpleCallableName, types)
+            ?: kotlinClass.companionObject?.let {
+                fixKotlinClass = it
+                return@let parseKFunction(fixKotlinClass, simpleCallableName, types)
+            }
         callable?.let { callableNo ->
-            return callableNo<R>(instance, *args)
+            return callableNo<R>(parseCallTarget(fixKotlinClass, instance), *args)
         }
                 ?: throw ReflectException("Can not find the matched callable for [simpleCallableName](value = $simpleCallableName) in [kotlinClass](value = $kotlinClass)")
     }
@@ -979,19 +1002,30 @@ class CallProperty<R : Any>(
     var value: R?
         @Throws(ReflectException::class)
         set(value) {
-            val property = parseKProperty(kotlinClass, simplePropertyName, if (value != null) value::class else null)
+            var fixKotlinClass = kotlinClass
+            val type = if (value != null) value::class else null
+            val property = parseKProperty(kotlinClass, simplePropertyName, type)
+                ?: kotlinClass.companionObject?.let {
+                    fixKotlinClass = it
+                    return@let parseKProperty(fixKotlinClass, simplePropertyName, type)
+                }
             property?.let { propertyNo ->
                 if (propertyNo is KMutableProperty) {
-                    propertyNo.setter<Unit>(instance, value)
-                }
+                    propertyNo.setter<Unit>(parseCallTarget(fixKotlinClass, instance), value)
+                } else throw ReflectException("Can not assign the value of property named [simplePropertyName](value = $simplePropertyName) in [kotlinClass](value = $kotlinClass)")
             }
                     ?: throw ReflectException("Can not find the matched property for [simplePropertyName](value = $simplePropertyName) in [kotlinClass](value = $kotlinClass)")
         }
         @Throws(ReflectException::class)
         get() {
+            var fixKotlinClass = kotlinClass
             val property = parseKProperty(kotlinClass, simplePropertyName)
+                ?: kotlinClass.companionObject?.let {
+                    fixKotlinClass = it
+                    return@let parseKProperty(fixKotlinClass, simplePropertyName)
+                }
             property?.let { propertyNo ->
-                return propertyNo.getter<R>(instance)
+                return propertyNo.getter<R>(parseCallTarget(fixKotlinClass, instance))
             }
                     ?: throw ReflectException("Can not find the matched property for [simplePropertyName](value = $simplePropertyName) in [kotlinClass](value = $kotlinClass)")
         }
