@@ -183,7 +183,7 @@ Demo.04 Call property by reflect
             val makeText = "android.widget.Toast.makeText"
             val LENGTH_LONG = "android.widget.Toast.LENGTH_LONG"
 
-            callsStatic(makeText)(applicationContext, "Hello World", property<Int>(LENGTH_LONG)?: 0)
+            callsStatic(makeText)(applicationContext, "Hello World", propertyStatic<Int>(LENGTH_LONG).value ?: 0)
             .calls("show")()
 
             ... ...
