@@ -22,6 +22,7 @@ import java.lang.reflect.Proxy
 import kotlin.reflect.*
 import kotlin.reflect.full.companionObject
 import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.jvm.isAccessible
 
 /**
  * Some functions to make reflective calls.
@@ -328,6 +329,7 @@ fun <T> KClass<*>.createInner(handler: (CallInnerHandler<T>.() -> Unit)? = null)
 @Throws(ReflectException::class)
 private operator fun <R> KCallable<*>.invoke(vararg args: Any?): R? {
     try {
+        this.isAccessible = true
         return when (this.parameters.firstOrNull()?.kind) {
             KParameter.Kind.INSTANCE -> {
                 this.call(*args) as? R
@@ -531,16 +533,21 @@ fun Any?.calls(callableName: String?) = this.call<Any>(callableName)
 @Throws(ReflectException::class)
 fun <R> Any?.call(callableName: String?): CallMedia<R> = callableName.ifNotNullOrBlank { fullCallableName ->
 
-    return (if (fullCallableName.contains(".")) fullCallableName.substringAfterLast(".") else fullCallableName).ifNotNullOrBlank simple@{ simpleCallableName ->
+    return fullCallableName.runWithSimpleName simple@{ simpleCallableName ->
         return@simple CallMedia<R>(
                 parseKClassByInstance(this, callableName),
                 this,
-                simpleCallableName)
+                simpleCallableName,
+                if (fullCallableName.contains(".")) fullCallableName else null)
     }
             ?: throw ReflectException("The [simpleCallableName] for param [callableName](value = $callableName) can not be null or blank")
 
 }
         ?: throw ReflectException("The param [callableName](value = $callableName) can not be null or blank")
+
+private fun <R> String.runWithSimpleName(block: (String) -> R): R? =
+        (if (this.contains(".")) this.substringAfterLast(".") else this).ifNotNullOrBlank(block)
+
 
 /***
  *  Call a matched static property which full name with package is [propertyName]
@@ -628,7 +635,7 @@ fun Any?.propertys(propertyName: String?) = this.property<Any>(propertyName)
 @Throws(ReflectException::class)
 fun <R : Any> Any?.property(propertyName: String?): CallProperty<R> = propertyName.ifNotNullOrBlank { fullPropertyName ->
 
-    return (if (fullPropertyName.contains(".")) fullPropertyName.substringAfterLast(".") else fullPropertyName).ifNotNullOrBlank simple@{ simplePropertyName ->
+    return fullPropertyName.runWithSimpleName simple@{ simplePropertyName ->
         return@simple CallProperty<R>(
                 parseKClassByInstance(this, propertyName),
                 this,
@@ -690,13 +697,25 @@ private fun parseKProperty(clazz: KClass<*>, simplePropertyName: String, type: K
 }
 
 @Throws(ReflectException::class)
-private fun parseKFunction(clazz: KClass<*>, simpleCallableName: String, types: Array<KClass<*>>): KFunction<*>? {
+private fun parseKFunction(clazz: KClass<*>, simpleCallableName: String, types: Array<KClass<*>>, extensionCallableName: String? = null, extensionInstance: Any? = null) =
     try {
-        return clazz.members.firstMatchFunction(simpleCallableName, types)
+        clazz.members.firstMatchFunction(simpleCallableName, types)
+    } catch (e: UnsupportedOperationException) {
+        // maybe it's a extension function, try to use java
+        try {
+            extensionCallableName?.let { extensionCallableNameNo ->
+                extensionCallableNameNo.runWithSimpleName { simpleExtensionCallableName ->
+                    return@runWithSimpleName parseKClassByCallableName(extensionCallableNameNo).java.methods.asList().firstMatchMethod(simpleExtensionCallableName,
+                            types.addFirst(extensionInstance?.let { it::class } ?: NULL::class))
+                }
+            }
+        } catch (e: Throwable) {
+            throw ReflectException(e)
+        }
     } catch (e: Throwable) {
         throw ReflectException(e)
     }
-}
+
 
 private fun Collection<KCallable<*>>.firstMatchProperty(simpleCallableName: String, type: KClass<*>? = null) = this.firstOrNull {
     it is KProperty
@@ -710,16 +729,34 @@ private fun Collection<KCallable<*>>.firstMatchProperty(simpleCallableName: Stri
 private fun Collection<KCallable<*>>.firstMatchFunction(simpleCallableName: String? = null, types: Array<KClass<*>>) = this.firstOrNull {
     it is KFunction
             && (simpleCallableName == null || it.name == simpleCallableName)
-            && it.parameters.sameAsOrSuperOf(types.asList())
+            && it.parameters.sameTypeAsOrSuperOf(types.asList())
 } as? KFunction<*>
 
-private fun List<KParameter>.sameAsOrSuperOf(that: List<KClass<*>>): Boolean {
+private fun Collection<Method>.firstMatchMethod(
+        simpleCallableName: String? = null,
+        types: Array<KClass<*>>
+) = this.firstOrNull {
+    (simpleCallableName == null || it.name == simpleCallableName)
+            && it.parameterTypes.asList().sameAsOrSuperOf(types.asList())
+}
+
+private fun List<KParameter>.sameTypeAsOrSuperOf(that: List<KClass<*>>): Boolean {
     this.filter { it.kind == KParameter.Kind.VALUE }
             .also { if (it.size != that.size) return false }
             .forEachIndexed { index, kParameter ->
                 if (that[index] == NULL::class) return@forEachIndexed
                 if (that[index] != kParameter.type.classifier
                         && (kParameter.type.classifier as? KClass<*>)?.let { !that[index].isSubclassOf(it) } != false) return false
+            }
+    return true
+}
+
+private fun List<Class<*>>.sameAsOrSuperOf(that: List<KClass<*>>): Boolean {
+    this.also { if (it.size != that.size) return false }
+            .forEachIndexed { index, parameterClass ->
+                if (that[index] != parameterClass
+                        && (!that[index].java.isAssignableFrom(parameterClass))
+                ) return false
             }
     return true
 }
@@ -736,6 +773,11 @@ private fun List<Class<*>>.sameAsOrSubOf(that: List<KClass<*>>): Boolean {
 private fun <T> Array<T>.dropFirst(): Array<T> =
         if (this.isEmpty()) this
         else this.copyOfRange(1, this.size)
+
+private inline fun <reified T> Array<T>.addFirst(first: T): Array<T> =
+        this.asList().toMutableList().apply {
+            add(first)
+        }.toTypedArray()
 
 private fun parseKotlinTypes(vararg values: Any?): Array<KClass<*>> {
     if (values.isEmpty()) {
@@ -942,7 +984,8 @@ abstract class CallInvoke<N> {
 class CallMedia<R>(
         private val kotlinClass: KClass<*>,
         private val instance: Any?,
-        private val simpleCallableName: String
+        private val simpleCallableName: String,
+        private val extensionCallableName: String? = null
 ) : CallInvoke<R>() {
 
     override fun beforeNextCall() = invoke()
@@ -950,21 +993,37 @@ class CallMedia<R>(
     /***
      * The operator function [( )][CallMedia.invoke] to pass parameters for reflective call.
      */
+    @Suppress("UNCHECKED_CAST")
     @Throws(ReflectException::class)
     operator fun invoke(vararg args: Any?): R? {
         val types = parseKotlinTypes(*args)
         var fixKotlinClass = kotlinClass
-        val callable = parseKFunction(kotlinClass, simpleCallableName, types)
+        val call = parseKFunction(kotlinClass, simpleCallableName, types, extensionCallableName, instance)
             ?: kotlinClass.companionObject?.let {
                 fixKotlinClass = it
                 return@let parseKFunction(fixKotlinClass, simpleCallableName, types)
             }
-        callable?.let { callableNo ->
-            return callableNo<R>(parseCallTarget(fixKotlinClass, instance), *args)
+        call?.let { callNo ->
+            return when (callNo) {
+                is KCallable<*> -> if (callNo.isExtension()) {
+                    callNo<R>(parseCallTarget(fixKotlinClass, instance), instance, *args)
+                } else {
+                    callNo<R>(parseCallTarget(fixKotlinClass, instance), *args)
+                }
+                is Method -> try {
+                    callNo.invoke(null, instance, *args) as? R
+                } catch (e: Throwable) {
+                    throw ReflectException(e)
+                }
+                else -> throw ReflectException("The callable [callNo](value = $callNo) cannot be invoked")
+            }
+
         }
                 ?: throw ReflectException("Can not find the matched callable for [simpleCallableName](value = $simpleCallableName) in [kotlinClass](value = $kotlinClass)")
     }
 }
+
+private fun KCallable<*>.isExtension() = this.parameters.any { it.kind == KParameter.Kind.EXTENSION_RECEIVER }
 
 /***
  *  The medium class after reflective [propertys]/[property],

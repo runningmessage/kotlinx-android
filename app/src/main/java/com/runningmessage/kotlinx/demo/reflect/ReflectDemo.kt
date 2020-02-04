@@ -42,6 +42,8 @@ class ReflectDemo {
         private const val RecyclerView                  = "$packageSupportWidget.RecyclerView"
         private const val StaggeredGridLayoutManager    = "$packageSupportWidget.StaggeredGridLayoutManager"
 
+        private const val runInActivity                 = "com.runningmessage.kotlinx.demo.reflect.ReflectDemo.runInActivity"
+
         //@formatter:on
 
         private lateinit var activity: Any
@@ -49,7 +51,7 @@ class ReflectDemo {
         fun onCreate(activity: Any) {
             this.activity = activity
             this.activity.ifIs(AppCompatActivity) { appCompatActivity: Any ->
-                appCompatActivity.runInActivity()
+                appCompatActivity.calls(runInActivity)()
             }
         }
 
